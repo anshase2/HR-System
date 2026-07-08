@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HR_System.DTO
+namespace HR.BLL.DTOs
 {
     public class LoginDTO
     {
@@ -11,5 +11,8 @@ namespace HR_System.DTO
 
         [Required(ErrorMessage = "Password can't be blank")]
         public string Password { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Full Name can't be blank")]
+        public string FullName { get; set; } = string.Empty;
+
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace HR_System.Entities
 {
-    public class Emplyee
+    public class Employee
     {
     }
 }

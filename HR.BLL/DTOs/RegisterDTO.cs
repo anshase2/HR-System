@@ -1,17 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace HR_System.DTO
+namespace HR.BLL.DTOs
 {
     public class RegisterDTO
     {
-        [Required(ErrorMessage = "Employee Name can't be blank")]
-        public string EmployeeName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Full Name can't be blank")]
+        public string FullName { get; set; } = string.Empty;
 
 
         [Required(ErrorMessage = "Email can't be blank")]
         [EmailAddress(ErrorMessage = "Email should be in a proper email address format")]
-        [Remote(action: "IsEmailAlreadyRegistered", controller: "Account", ErrorMessage = "Email is already is use")]
+       // [Remote(action: "IsEmailAlreadyRegistered", controller: "Account", ErrorMessage = "Email is already is use")]
         public string Email { get; set; } = string.Empty;
 
 
@@ -23,6 +22,9 @@ namespace HR_System.DTO
 
         [Required(ErrorMessage = "Password can't be blank")]
         public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Country can't be blank")]
+        public string Country { get; set; } = string.Empty;
 
 
         [Required(ErrorMessage = "Confirm Password can't be blank")]

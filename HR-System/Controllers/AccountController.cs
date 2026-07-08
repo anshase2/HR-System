@@ -1,8 +1,12 @@
-﻿using HR_System.DTO;
-using HR_System.Entities.Identity;
+﻿using HR.BLL.DTOs;
+using HR.BLL.Services;
+using HR.BLL.DTOs;
+using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using HR.BLL.Interfaces;
 
 namespace HR_System.Controllers
 {
@@ -10,9 +14,8 @@ namespace HR_System.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
+      
+        private readonly IAuthService _authService;
 
 
         /// <summary>
@@ -21,11 +24,11 @@ namespace HR_System.Controllers
         /// <param name="userManager"></param>
         /// <param name="signInManager"></param>
         /// <param name="roleManager"></param>
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<ApplicationRole> roleManager)
+        /// <param name="authService"></param>
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<ApplicationRole> roleManager, IAuthService authService)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _roleManager = roleManager;
+           
+            _authService = authService;
         }
 
 
@@ -35,39 +38,26 @@ namespace HR_System.Controllers
         /// <param name="registerDTO"></param>
         /// <returns></returns>
         [HttpPost("register")]
-        public async Task<ActionResult<ApplicationUser>> PostRegister(RegisterDTO registerDTO)
+        public async Task<ActionResult<RegisterResponseDTO>> PostRegister(RegisterDTO registerDTO)
         {
-            //Validation
+            // Validation
             if (ModelState.IsValid == false)
             {
                 string errorMessage = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return Problem(errorMessage);
             }
 
+            // Delegate registration to the business/service layer
+            var response= await _authService.RegisterAsync(registerDTO);
 
-            //Create user
-            ApplicationUser user = new ApplicationUser()
+            if (response.Errors != null && response.Errors.Any())
             {
-                Email = registerDTO.Email,
-                PhoneNumber = registerDTO.PhoneNumber,
-                UserName = registerDTO.Email,
-                EmployeeName = registerDTO.EmployeeName
-            };
-
-            IdentityResult result = await _userManager.CreateAsync(user, registerDTO.Password);
-
-            if (result.Succeeded)
-            {
-                //sign-in
-                await _signInManager.SignInAsync(user, isPersistent: false);
-
-                return Ok(user);
+                return Problem(string.Join(" | ", response.Errors));
             }
-            else
-            {
-                string errorMessage = string.Join(" | ", result.Errors.Select(e => e.Description)); //error1 | error2
-                return Problem(errorMessage);
-            }
+            
+                      
+
+            return response;
         }
 
 
@@ -76,7 +66,7 @@ namespace HR_System.Controllers
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        [HttpGet]
+       /* [HttpGet]
         public async Task<IActionResult> IsEmailAlreadyRegistered(string email)
         {
             ApplicationUser? user = await _userManager.FindByEmailAsync(email);
@@ -89,7 +79,7 @@ namespace HR_System.Controllers
             {
                 return Ok(false);
             }
-        }
+        }*/
 
 
         /// <summary>
@@ -98,7 +88,7 @@ namespace HR_System.Controllers
         /// <param name="loginDTO"></param>
         /// <returns></returns>
         [HttpPost("login")]
-        public async Task<IActionResult> PostLogin(LoginDTO loginDTO)
+        public async Task<ActionResult<LoginResponseDTO>> PostLogin(LoginDTO loginDTO)
         {
             //Validation
             if (ModelState.IsValid == false)
@@ -106,27 +96,19 @@ namespace HR_System.Controllers
                 string errorMessage = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return Problem(errorMessage);
             }
+            var user = await _authService.LoginAsync(loginDTO);
 
 
-            var result = await _signInManager.PasswordSignInAsync(loginDTO.Email, loginDTO.Password, isPersistent: false, lockoutOnFailure: false);
-
-            if (result.Succeeded)
-            {
-                ApplicationUser? user = await _userManager.FindByEmailAsync(loginDTO.Email);
-
-                if (user == null)
-                {
-                    return NoContent();
-                }
-
-                return Ok(new { employeeName = user.EmployeeName, email = user.Email });
-            }
-
-            else
-            {
+            if (user == null)
                 return Problem("Invalid email or password");
-            }
+
+
+            return user;
         }
+
+
+          
+        
 
 
         /// <summary>
@@ -136,7 +118,7 @@ namespace HR_System.Controllers
         [HttpGet("logout")]
         public async Task<IActionResult> GetLogout()
         {
-            await _signInManager.SignOutAsync();
+            await _authService.LogoutAsync();
 
             return NoContent();
         }

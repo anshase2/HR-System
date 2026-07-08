@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.37328.6 d17.14
+VisualStudioVersion = 17.14.37328.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HR-System", "HR-System\HR-System.csproj", "{10EF5EC2-AD2E-408F-B385-10D9463B3CA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HR.API", "HR-System\HR.API.csproj", "{10EF5EC2-AD2E-408F-B385-10D9463B3CA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HR.BLL", "HR.BLL\HR.BLL.csproj", "{C7179971-4D43-479F-B328-B1CBF83503C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HR.DAL", "HR.DAL\HR.DAL.csproj", "{8472761D-C046-4497-99FF-CAD9C60E1852}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{10EF5EC2-AD2E-408F-B385-10D9463B3CA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10EF5EC2-AD2E-408F-B385-10D9463B3CA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10EF5EC2-AD2E-408F-B385-10D9463B3CA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7179971-4D43-479F-B328-B1CBF83503C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7179971-4D43-479F-B328-B1CBF83503C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7179971-4D43-479F-B328-B1CBF83503C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7179971-4D43-479F-B328-B1CBF83503C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8472761D-C046-4497-99FF-CAD9C60E1852}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8472761D-C046-4497-99FF-CAD9C60E1852}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8472761D-C046-4497-99FF-CAD9C60E1852}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8472761D-C046-4497-99FF-CAD9C60E1852}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using HR.DAL.Entities.Identity;
+using HR.BLL.Services;
+using HR.BLL.Interfaces;
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddTransient<IAuthService, AuthService>();
 
 // Add services to the container.
 
@@ -16,7 +23,6 @@ options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
     });
 
 
-/*//Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options => {
  options.Password.RequiredLength = 5;
  options.Password.RequireNonAlphanumeric = false;
@@ -24,11 +30,11 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options => {
  options.Password.RequireLowercase = true;
  options.Password.RequireDigit = true;
 })
- .AddEntityFrameworkStores<ApplicationDbContext>()
+ //.AddEntityFrameworkStores<ApplicationDbContext>()
  .AddDefaultTokenProviders()
- .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()
- .AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, Guid>>()
- ;*/
+// .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()
+ //.AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, Guid>>()
+ ;
 
 var app = builder.Build();
 
