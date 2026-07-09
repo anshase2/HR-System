@@ -8,5 +8,6 @@ namespace HR.BLL.Interfaces
         Task<RegisterResponseDTO> RegisterAsync(RegisterDTO registerDto);
         Task<LoginResponseDTO?> LoginAsync(LoginDTO loginDTO);
         Task LogoutAsync();
+        Guid? GetCurrentUserId();
     }
 }

@@ -1,13 +1,17 @@
-using Microsoft.AspNetCore.Mvc;
+using HR.BLL.Interfaces;
+using HR.BLL.Services;
+using HR.DAL.DatabaseContext;
+using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using HR.DAL.Entities.Identity;
-using HR.BLL.Services;
-using HR.BLL.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IJobService, JobService>();
 
 // Add services to the container.
 
@@ -16,11 +20,16 @@ builder.Services.AddControllers(options =>
     options.Filters.Add(new ProducesAttribute("application/json"));
     options.Filters.Add(new ConsumesAttribute("application/json"));
 });
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options => {
-options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
-    });
+builder.Services.AddSwaggerGen(//options => {
+//options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
+    );
 
 
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options => {
@@ -30,10 +39,10 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options => {
  options.Password.RequireLowercase = true;
  options.Password.RequireDigit = true;
 })
- //.AddEntityFrameworkStores<ApplicationDbContext>()
+ .AddEntityFrameworkStores<ApplicationDbContext>()
  .AddDefaultTokenProviders()
-// .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()
- //.AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, Guid>>()
+ .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()
+ .AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, Guid>>()
  ;
 
 var app = builder.Build();

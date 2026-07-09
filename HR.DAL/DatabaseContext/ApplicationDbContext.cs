@@ -1,5 +1,5 @@
 ﻿using HR.DAL.Entities.Identity;
-using HR_System.Entities;
+using HR.DAL.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,6 +17,8 @@ namespace HR.DAL.DatabaseContext
         {
         }
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<Job> Jobs { get; set; }
+
 
 
 

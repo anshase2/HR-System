@@ -1,6 +1,5 @@
 ﻿using HR.BLL.DTOs;
 using HR.BLL.Services;
-using HR.BLL.DTOs;
 using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -25,7 +24,7 @@ namespace HR_System.Controllers
         /// <param name="signInManager"></param>
         /// <param name="roleManager"></param>
         /// <param name="authService"></param>
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<ApplicationRole> roleManager, IAuthService authService)
+        public AccountController(IAuthService authService)
         {
            
             _authService = authService;
