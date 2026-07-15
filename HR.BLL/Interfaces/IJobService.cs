@@ -16,9 +16,10 @@ namespace HR.BLL.Interfaces
 
         Task<JobResponseDTO?> GetByIdAsync(int id);
 
-        Task<JobResponseDTO> CreateAsync(JobRequestDTO dto);
+        Task<JobResponseDTO> CreateAsync(JobRequestDTO dto, Guid userid);
       //  Task<bool> UpdateAsync(int id, UpdateJobDto dto);
 
         Task<bool> DeleteAsync(int id);
+        Task<bool> UpdateAsync(int id, JobRequestDTO dto);
     }
 }

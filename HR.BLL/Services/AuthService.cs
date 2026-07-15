@@ -21,19 +21,22 @@ namespace HR.BLL.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IJwtService _jwtService;
 
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IJwtService jwtService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _httpContextAccessor = httpContextAccessor;
+            _jwtService = jwtService;
         }
-
-        public async Task<RegisterResponseDTO> RegisterAsync(RegisterDTO registerDto)
+       
+        public async Task<CreateEmplyeeResponseDTO> CreateEmployeeAsync(CreateEmplyeeRequestDTO registerDto)
         {
             ApplicationUser user = new ApplicationUser()
             {
@@ -51,21 +54,20 @@ namespace HR.BLL.Services
 
             if (!result.Succeeded)
             {
-                return new RegisterResponseDTO
+                return new CreateEmplyeeResponseDTO
                 {
                     Message = "User registration failed",
                     Errors = result.Errors.Select(e => e.Description).ToList()
                 };
             }
 
-            await _userManager.AddToRoleAsync(user, "Applicant");
-            await _signInManager.SignInAsync(user, false);
+            await _userManager.AddToRoleAsync(user, registerDto.Role);
 
-            return new RegisterResponseDTO
+            return new CreateEmplyeeResponseDTO
             {
                 Id = user.Id,
                 Email = user.Email,
-                Role = "Applicant",
+                Role = registerDto.Role,
                 FullName = user.FullName,
                 Message = "User registered successfully",
                 Errors = null
@@ -73,6 +75,9 @@ namespace HR.BLL.Services
         }
         public async Task<LoginResponseDTO?> LoginAsync(LoginDTO loginDTO)
         {
+            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+             if (user == null)
+                return null;
             var result = await _signInManager.PasswordSignInAsync(
                 loginDTO.Email,
                 loginDTO.Password,
@@ -83,20 +88,19 @@ namespace HR.BLL.Services
             if (!result.Succeeded)
                 return null;
 
-
-            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-
-
-            if (user == null)
-                return null;
-
+            var authResponse = _jwtService.CreateJwtToken(user);
 
             return new LoginResponseDTO
             {
                 FullName = user.FullName,
                 Email = user.Email,
                 UserId = user.Id,
-                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty
+                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty,
+                Token= authResponse.Token,
+                Expiration = authResponse.Expiration
+
+
+
             };
         }
 

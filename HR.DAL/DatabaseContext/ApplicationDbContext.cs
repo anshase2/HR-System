@@ -16,7 +16,7 @@ namespace HR.DAL.DatabaseContext
             : base(options)
         {
         }
-        public DbSet<Employee> Employees { get; set; }
+       // public DbSet<Employee> Employees { get; set; }
         public DbSet<Job> Jobs { get; set; }
 
 

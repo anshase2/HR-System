@@ -1,4 +1,5 @@
 ﻿using HR.DAL.Entities;
+using HR.DAL.Entities.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace HR.BLL.DTOs
         public bool IsActive { get; set; }
 
         public string CreatedById { get; set; } = null!;
-        public Employee CreatedBy { get; set; } = null!;
+        public ApplicationUser CreatedBy { get; set; } = null!;
 
         /* public ICollection<Application> Applications { get; set; }
              = new List<Application>();*/

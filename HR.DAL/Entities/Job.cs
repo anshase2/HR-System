@@ -34,7 +34,7 @@ namespace HR.DAL.Entities
         public bool IsActive { get; set; }
 
         public Guid CreatedById { get; set; } = Guid.Empty;
-        public Employee CreatedBy { get; set; } = null!;
+        public ApplicationUser CreatedBy { get; set; } = null!;
 
        /* public ICollection<Application> Applications { get; set; }
             = new List<Application>();*/

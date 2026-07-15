@@ -1,14 +1,16 @@
-﻿using HR.DAL.Entities;
+﻿using HR.DAL.Entities.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HR.BLL.DTOs;
 
 namespace HR.BLL.Interfaces
 {
-    public interface IEmployeeService
+    public interface IJwtService
     {
-        Task<Employee?> GetByUserId(Guid? userId);
+        authenticationResponseDTO CreateJwtToken(ApplicationUser user);
+
     }
 }

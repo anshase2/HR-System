@@ -5,7 +5,7 @@ namespace HR.BLL.Interfaces
 {
     public interface IAuthService
     {
-        Task<RegisterResponseDTO> RegisterAsync(RegisterDTO registerDto);
+        Task<CreateEmplyeeResponseDTO> CreateEmployeeAsync(CreateEmplyeeRequestDTO registerDto);
         Task<LoginResponseDTO?> LoginAsync(LoginDTO loginDTO);
         Task LogoutAsync();
         Guid? GetCurrentUserId();

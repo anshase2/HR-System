@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HR.BLL.DTOs
 {
-    public class RegisterResponseDTO
+    public class CreateEmplyeeResponseDTO
     {
         public Guid Id { get; set; }
 

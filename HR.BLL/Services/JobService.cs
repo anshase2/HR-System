@@ -2,6 +2,8 @@ using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
+using HR.DAL.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System.Collections.Generic;
@@ -14,14 +16,12 @@ namespace HR.BLL.Services
     public class JobService : IJobService
     {
         private readonly ApplicationDbContext _db;
-        private readonly IAuthService _authService;
-        private readonly IEmployeeService _employeeService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public JobService(ApplicationDbContext db, IAuthService authService,IEmployeeService employeeService )
+        public JobService(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
         {
             _db = db;
-            _authService = authService;
-            _employeeService = employeeService;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<JobResponseDTO>> GetAllAsync(string? department,
@@ -58,10 +58,11 @@ namespace HR.BLL.Services
             return MapToDto(job);
         }
 
-        public async Task<JobResponseDTO> CreateAsync(JobRequestDTO dto)
+        public async Task<JobResponseDTO> CreateAsync(JobRequestDTO dto,Guid userid)
         {
 
-            var employee = await _employeeService.GetByUserId(_authService.GetCurrentUserId());
+            // var employee = await _employeeService.GetByUserId(_authService.GetCurrentUserId());
+
 
             var job = new Job
             {
@@ -75,8 +76,8 @@ namespace HR.BLL.Services
                 PostedDate = System.DateTime.UtcNow,
                 ClosingDate = dto.ClosingDate,
                 IsActive = true,
-                CreatedById = employee.Id,// _EmplyeeService.getEmployeebyUserID(_authService.GetCurrentUserId()).ID
-                CreatedBy = employee//get the current user from the context or authentication service
+                CreatedById = userid,// _EmplyeeService.getEmployeebyUserID(_authService.GetCurrentUserId()).ID
+                CreatedBy = await _userManager.FindByIdAsync(userid.ToString())//get the current user from the context or authentication service
             };
 
             _db.Jobs.Add(job);
@@ -115,6 +116,11 @@ namespace HR.BLL.Services
                 CreatedById = job.CreatedById.ToString(),
                 CreatedBy = job.CreatedBy
             };
+        }
+
+        public Task<bool> UpdateAsync(int id, JobRequestDTO dto)
+        {
+            throw new NotImplementedException();
         }
     }
 }

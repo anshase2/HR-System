@@ -11,8 +11,8 @@ namespace HR.BLL.DTOs
 
         [Required(ErrorMessage = "Password can't be blank")]
         public string Password { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Full Name can't be blank")]
-        public string FullName { get; set; } = string.Empty;
+       // [Required(ErrorMessage = "Full Name can't be blank")]
+        //public string FullName { get; set; } = string.Empty;
 
     }
 }

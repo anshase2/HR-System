@@ -2,7 +2,7 @@
 
 namespace HR.BLL.DTOs
 {
-    public class RegisterDTO
+    public class CreateEmplyeeRequestDTO
     {
         [Required(ErrorMessage = "Full Name can't be blank")]
         public string FullName { get; set; } = string.Empty;
@@ -25,6 +25,10 @@ namespace HR.BLL.DTOs
 
         [Required(ErrorMessage = "Country can't be blank")]
         public string Country { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Role can't be blank")]
+
+        public string Role { get; set; } = string.Empty;// Admin, Employee
+
 
 
         [Required(ErrorMessage = "Confirm Password can't be blank")]
