@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 using HR.BLL.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HR_System.Controllers
 {
@@ -13,7 +16,7 @@ namespace HR_System.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-      
+
         private readonly IAuthService _authService;
 
 
@@ -26,7 +29,7 @@ namespace HR_System.Controllers
         /// <param name="authService"></param>
         public AccountController(IAuthService authService)
         {
-           
+
             _authService = authService;
         }
 
@@ -36,8 +39,12 @@ namespace HR_System.Controllers
         /// </summary>
         /// <param name="registerDTO"></param>
         /// <returns></returns>
-        [HttpPost("register")]
-        public async Task<ActionResult<RegisterResponseDTO>> PostRegister(RegisterDTO registerDTO)
+        ///
+        // [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
+        [HttpPost("create-employee")]
+
+        public async Task<ActionResult<CreateEmplyeeResponseDTO>> PostCreateEmployee(CreateEmplyeeRequestDTO registerDTO)
         {
             // Validation
             if (ModelState.IsValid == false)
@@ -47,7 +54,7 @@ namespace HR_System.Controllers
             }
 
             // Delegate registration to the business/service layer
-            var response= await _authService.RegisterAsync(registerDTO);
+            var response= await _authService.CreateEmployeeAsync(registerDTO);
 
             if (response.Errors != null && response.Errors.Any())
             {

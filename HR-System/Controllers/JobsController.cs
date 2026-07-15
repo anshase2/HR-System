@@ -1,7 +1,8 @@
-﻿using HR.BLL.Interfaces;
+﻿using HR.BLL.DTOs;
+using HR.BLL.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using HR.BLL.DTOs;
+using System.Security.Claims;
 
 namespace HR_System.Controllers
 {
@@ -27,28 +28,31 @@ namespace HR_System.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public async Task<ActionResult<JobResponseDTO>> Get(int id)
         {
             var job = await _jobService.GetByIdAsync(id);
 
             if (job == null)
                 return NotFound();
 
-            return Ok(job);
+            return job;
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(JobRequestDTO dto)
         {
-            var job = await _jobService.CreateAsync(dto);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+          //  if (userId == null)
+            //    return Unauthorized();
+            var job = await _jobService.CreateAsync(dto, Guid.Parse(userId));
             return CreatedAtAction(nameof(Get),
                 new { id = job.Id },
                 job);
         }
 
-       /* [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateJobDto dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, JobRequestDTO dto)
         {
             var updated = await _jobService.UpdateAsync(id, dto);
 
@@ -57,7 +61,7 @@ namespace HR_System.Controllers
 
             return NoContent();
         }
-       */
+       
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
