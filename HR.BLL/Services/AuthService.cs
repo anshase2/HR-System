@@ -35,6 +35,38 @@ namespace HR.BLL.Services
             _httpContextAccessor = httpContextAccessor;
             _jwtService = jwtService;
         }
+
+        public async Task<ApplicantResponseDTO?> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
+        {
+            ApplicationUser user = new ApplicationUser()
+            {
+                Email = registerDto.Email,
+                PhoneNumber = registerDto.PhoneNumber,
+                UserName = registerDto.Email,
+                FullName = string.IsNullOrWhiteSpace(registerDto.FirstName) ? registerDto.LastName : (registerDto.FirstName + " " + registerDto.LastName),
+                CreatedAt = DateOnly.FromDateTime(DateTime.Now)
+            };
+
+            IdentityResult result = await _userManager.CreateAsync(user, registerDto.Password);
+
+            if (!result.Succeeded)
+            {
+                return null;
+            }
+
+            await _userManager.AddToRoleAsync(user, "Applicant");
+            await _signInManager.SignInAsync(user, false);
+
+            var authResponse = _jwtService.CreateJwtToken(user);
+
+            return new ApplicantResponseDTO
+            {
+                Id = user.Id,
+                User = user,
+                Token = authResponse.Token,
+                Expiration = authResponse.Expiration
+            };
+        }
        
         public async Task<CreateEmplyeeResponseDTO> CreateEmployeeAsync(CreateEmplyeeRequestDTO registerDto)
         {

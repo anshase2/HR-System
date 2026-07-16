@@ -3,7 +3,9 @@ using HR.BLL.Interfaces;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System.Collections.Generic;
@@ -23,6 +25,8 @@ namespace HR.BLL.Services
             _db = db;
             _userManager = userManager;
         }
+
+        [HttpGet]
 
         public async Task<IEnumerable<JobResponseDTO>> GetAllAsync(string? department,
             string? location,
@@ -47,8 +51,8 @@ namespace HR.BLL.Services
 
             return jobs.Select(MapToDto).ToList();
         }
-
-        public async Task<JobResponseDTO?> GetByIdAsync(int id)
+        [HttpGet("{id:int}")]
+          public async Task<JobResponseDTO?> GetByIdAsync(int id)
         {
             var job = await _db.Jobs.FindAsync(id);
 
@@ -57,7 +61,7 @@ namespace HR.BLL.Services
 
             return MapToDto(job);
         }
-
+        [HttpPost]
         public async Task<JobResponseDTO> CreateAsync(JobRequestDTO dto,Guid userid)
         {
 
@@ -85,7 +89,7 @@ namespace HR.BLL.Services
 
             return MapToDto(job);
         }
-
+        [HttpDelete("{id}")]
         public async Task<bool> DeleteAsync(int id)
         {
             var job = await _db.Jobs.FindAsync(id);
@@ -117,6 +121,7 @@ namespace HR.BLL.Services
                 CreatedBy = job.CreatedBy
             };
         }
+        [HttpPut("{id}")]
 
         public Task<bool> UpdateAsync(int id, JobRequestDTO dto)
         {

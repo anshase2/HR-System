@@ -1,5 +1,6 @@
 ﻿using HR.BLL.DTOs;
 using HR.BLL.Services;
+using HR.BLL.DTOs;
 using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -64,6 +65,26 @@ namespace HR_System.Controllers
                       
 
             return response;
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register-applicant")]
+        public async Task<ActionResult<ApplicantResponseDTO>> PostRegisterApplicant(RegisterApplicantDTO registerDTO)
+        {
+            if (ModelState.IsValid == false)
+            {
+                string errorMessage = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return Problem(errorMessage);
+            }
+
+            var response = await _authService.RegisterApplicantAsync(registerDTO);
+
+            if (response == null)
+            {
+                return Problem("Applicant registration failed");
+            }
+
+            return Ok(response);
         }
 
 
