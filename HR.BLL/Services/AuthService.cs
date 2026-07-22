@@ -41,14 +41,15 @@ namespace HR.BLL.Services
             _context = context;
         }
 
-        public async Task<ApplicantResponseDTO> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
+        public async Task<RegisterApplicantResponseDTO> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
         {
             ApplicationUser user = new ApplicationUser()
             {
                 Email = registerDto.Email,
                 PhoneNumber = registerDto.PhoneNumber,
                 UserName = registerDto.Email,
-                FullName = string.IsNullOrWhiteSpace(registerDto.FirstName) ? registerDto.LastName : (registerDto.FirstName + " " + registerDto.LastName),
+                FirstName = registerDto.FirstName,
+                LastName = registerDto.LastName,
                 CreatedAt = DateOnly.FromDateTime(DateTime.Now)
             };
 
@@ -56,7 +57,7 @@ namespace HR.BLL.Services
 
             if (!result.Succeeded)
             {
-                return new ApplicantResponseDTO
+                return new RegisterApplicantResponseDTO
                 {
                    
                     Errors = result.Errors.Select(e => e.Description).ToList()
@@ -76,15 +77,18 @@ namespace HR.BLL.Services
             await _signInManager.SignInAsync(user, false);
 
             var authResponse = _jwtService.CreateJwtToken(user);
-           
-            return new ApplicantResponseDTO
-            {
-                Id = applicant.Id,
-                UserId = user.Id,
-                Token = authResponse.Token,
-                Expiration = authResponse.Expiration,
-                Role = "Applicant",
+      
 
+            return new RegisterApplicantResponseDTO
+            {
+                Applicant = new ApplicantResponseDTO
+                {
+                    Id = applicant.Id,
+                    UserId = user.Id,
+                    Role = UserRoles.Applicant
+                },
+                Token = authResponse.Token,
+                Expiration = authResponse.Expiration
             };
         }
        
@@ -96,7 +100,8 @@ namespace HR.BLL.Services
                 Email = registerDto.Email,
                 PhoneNumber = registerDto.PhoneNumber,
                 UserName = registerDto.Email,
-                FullName = registerDto.FullName,
+                FirstName = registerDto.FirstName,
+                LastName = registerDto.LastName,
                 CreatedAt = DateOnly.FromDateTime(DateTime.Now)
             };
 
@@ -120,7 +125,8 @@ namespace HR.BLL.Services
                 Id = user.Id,
                 Email = user.Email,
                 Role = registerDto.Role,
-                FullName = user.FullName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Message = "User registered successfully",
                 Errors = null
             };
@@ -143,7 +149,8 @@ namespace HR.BLL.Services
 
             return new LoginResponseDTO
             {
-                FullName = user.FullName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Email = user.Email,
                 UserId = user.Id,
                 Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? string.Empty,

@@ -4,9 +4,11 @@ namespace HR.BLL.DTOs
 {
     public class CreateEmplyeeRequestDTO
     {
-        [Required(ErrorMessage = "Full Name can't be blank")]
-        public string FullName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "First Name can't be blank")]
+        public string FirstName { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Last Name can't be blank")]
+        public string LastName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Email can't be blank")]
         [EmailAddress(ErrorMessage = "Email should be in a proper email address format")]

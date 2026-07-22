@@ -12,9 +12,7 @@ namespace HR.BLL.DTOs
         public Guid ?UserId { get; set; }
 
         //public ApplicationUser? User { get; set; }
-        public string? Token { get; set; } = string.Empty;
-        public DateTime ?Expiration { get; set; }
-        public List<string>? Errors { get; set; }
+       
         public string Role { get; set; } = "Applicant";
 
 
