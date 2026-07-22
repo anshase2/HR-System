@@ -18,6 +18,7 @@ namespace HR.DAL.DatabaseContext
         }
        // public DbSet<Employee> Employees { get; set; }
         public DbSet<Job> Jobs { get; set; }
+        public DbSet<HR.DAL.Entities.Application> Applications { get; set; }
 
 
 

@@ -1,4 +1,5 @@
-﻿using HR.DAL.Entities.Identity;
+﻿using HR.BLL.Constants;
+using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 
 namespace HR.API
@@ -12,8 +13,9 @@ namespace HR.API
 
             string[] roles =
   {
-        "Admin",
-        "Employee"
+        UserRoles.Admin,
+        UserRoles.Employee,
+        UserRoles.Applicant
         
     };
 

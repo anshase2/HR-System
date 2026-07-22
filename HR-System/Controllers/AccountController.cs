@@ -1,6 +1,7 @@
 ﻿using HR.BLL.DTOs;
 using HR.BLL.Services;
-using HR.BLL.DTOs;
+using HR.BLL.Constants;
+
 using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -79,10 +80,14 @@ namespace HR_System.Controllers
 
             var response = await _authService.RegisterApplicantAsync(registerDTO);
 
-            if (response == null)
-            {
-                return Problem("Applicant registration failed");
-            }
+            
+            
+                if (response.Errors != null && response.Errors.Any())
+                {
+                    return Problem(string.Join(" | ", response.Errors));
+                }
+
+            
 
             return Ok(response);
         }

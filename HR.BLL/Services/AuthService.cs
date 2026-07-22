@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using HR.BLL.Constants;
+
+using HR.DAL.DatabaseContext;
 using System.Threading.Tasks;
 
 
@@ -22,21 +25,23 @@ namespace HR.BLL.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IJwtService _jwtService;
-
+        private readonly ApplicationDbContext _context;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IHttpContextAccessor httpContextAccessor,
-            IJwtService jwtService)
+            IJwtService jwtService,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _httpContextAccessor = httpContextAccessor;
             _jwtService = jwtService;
+            _context = context;
         }
 
-        public async Task<ApplicantResponseDTO?> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
+        public async Task<ApplicantResponseDTO> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
         {
             ApplicationUser user = new ApplicationUser()
             {
@@ -51,20 +56,35 @@ namespace HR.BLL.Services
 
             if (!result.Succeeded)
             {
-                return null;
+                return new ApplicantResponseDTO
+                {
+                   
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
             }
+            var applicant = new Applicant
+            {
+                UserId = user.Id,
+                Address = registerDto.Country,
+                LinkedInUrl = registerDto.LinkedInUrl
+            };
 
-            await _userManager.AddToRoleAsync(user, "Applicant");
+            _context.Applicants.Add(applicant);
+            await _context.SaveChangesAsync();
+
+            await _userManager.AddToRoleAsync(user, UserRoles.Applicant);
             await _signInManager.SignInAsync(user, false);
 
             var authResponse = _jwtService.CreateJwtToken(user);
-
+           
             return new ApplicantResponseDTO
             {
-                Id = user.Id,
-                User = user,
+                Id = applicant.Id,
+                UserId = user.Id,
                 Token = authResponse.Token,
-                Expiration = authResponse.Expiration
+                Expiration = authResponse.Expiration,
+                Role = "Applicant",
+
             };
         }
        
@@ -93,7 +113,7 @@ namespace HR.BLL.Services
                 };
             }
 
-            await _userManager.AddToRoleAsync(user, registerDto.Role);
+            await _userManager.AddToRoleAsync(user, UserRoles.Employee);
 
             return new CreateEmplyeeResponseDTO
             {
@@ -110,11 +130,10 @@ namespace HR.BLL.Services
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
              if (user == null)
                 return null;
-            var result = await _signInManager.PasswordSignInAsync(
-                loginDTO.Email,
-                loginDTO.Password,
-                false,
-                false);
+            var result = await _signInManager.CheckPasswordSignInAsync(
+      user,
+      loginDTO.Password,
+      false);
 
 
             if (!result.Succeeded)

@@ -4,20 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HR.BLL.DTOs;
+using HR.DAL.applicationState;
 
 namespace HR.BLL.Interfaces
 {
     public interface IApplicationService
     {
-        Task<ApplicationResponseDTO> ApplyAsync(CreateApplicationDTO dto);
+        Task<ApplicationResponseDTO> ApplyAsync(CreateApplicationDTO dto,Guid userId);
 
         Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync();
 
-        Task<ApplicationResponseDTO?> GetByIdAsync(int id);
+        Task<ApplicationResponseDTO?> GetByApplicationIdAsync(int id);
 
         Task<IEnumerable<ApplicationResponseDTO>> GetByJobIdAsync(int jobId);
 
-        Task<IEnumerable<ApplicationResponseDTO>> GetByApplicantAsync(string email);
+        Task<IEnumerable<ApplicationResponseDTO>> GetApplicationsByApplicantAsync(Guid userId);
 
         Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status);
 
