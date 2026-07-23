@@ -1,4 +1,5 @@
 ﻿using HR.DAL.Entities.Identity;
+using HR.DAL.enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -23,11 +24,13 @@ namespace HR.DAL.Entities
 
         public string Location { get; set; } = null!;
 
-        public string EmploymentType { get; set; } = null!; // FullTime, PartTime...
+        public EmploymentType employmentType { get; set; }  // FullTime, PartTime...
+        public WorkplaceType workplaceType { get; set; }  // Onsite, Remote, Hybrid...
+
+        public ExperienceLevel ExperienceLevel { get; set; }  // Junior, Mid, Senior...
 
         public int MinYearsOfExperience { get; set; }
 
-        public string RequiredSkills { get; set; } = null!;
 
         public DateTime PostedDate { get; set; }
 

@@ -15,9 +15,15 @@ namespace HR.DAL.DatabaseContext
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
+
         }
-       // public DbSet<Employee> Employees { get; set; }
+        // public DbSet<Employee> Employees { get; set; }
         public DbSet<Job> Jobs { get; set; }
+        public DbSet<Skill> Skills { get; set; }
+        public DbSet<CVanalysis> CVanalysis { get; set; }
+        public DbSet<Application> Applications { get; set; }
+        public DbSet<Applicant> Applicants { get; set; }
+
 
 
 
@@ -26,9 +32,10 @@ namespace HR.DAL.DatabaseContext
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-           
-            
+
+
         }
     }
 }
