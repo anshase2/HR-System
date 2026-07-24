@@ -1,24 +1,18 @@
-using HR.DAL.applicationState;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace HR.DAL.Entities
 {
     public class Application
     {
         public int Id { get; set; }
-
         public int JobId { get; set; }
-
-        public int ApplicantId { get; set; }
-
-   // ?ublic string ApplicantEmail { get; set; } = string.Empty;
-
-        public string? ResumeUrl { get; set; }
-
-        public string? CoverLetter { get; set; }
-
-        public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
-
-        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+        public int UserId { get; set; }
+        public string CvUrl { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 }
