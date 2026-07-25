@@ -40,7 +40,7 @@ export default function JobCard({
         onClick={() => navigate(`/jobs/${id}`)}
         className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
       >
-        Apply Now
+        View Details
       </button>
 
     </div>

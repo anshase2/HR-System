@@ -14,6 +14,7 @@ export default function RegisterForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("Jordan");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -42,6 +43,19 @@ export default function RegisterForm() {
 
     navigate("/login");
   };
+const countryCodes = {
+  Jordan: "+962",
+  "Saudi Arabia": "+966",
+  "United Arab Emirates": "+971",
+  Qatar: "+974",
+  Kuwait: "+965",
+  Bahrain: "+973",
+  Oman: "+968",
+  Egypt: "+20",
+  Iraq: "+964",
+  Lebanon: "+961",
+};
+
 
   return (
     <>
@@ -124,6 +138,30 @@ export default function RegisterForm() {
         </select>
 
       </div>
+      {/* Phone Number */}
+<div className="mb-5">
+
+  <label className="block mb-2 font-medium">
+    Phone Number
+  </label>
+
+  <div className="flex">
+
+    <div className="w-24 h-14 border border-gray-300 rounded-l-xl bg-gray-100 flex items-center justify-center font-medium text-gray-700">
+      {countryCodes[country]}
+    </div>
+
+    <input
+      type="tel"
+      placeholder="7XXXXXXXX"
+      value={phone}
+      onChange={(e) => setPhone(e.target.value)}
+      className="flex-1 h-14 border border-l-0 border-gray-300 rounded-r-xl px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+
+  </div>
+
+</div>
 
       {/* Password */}
       <div className="mb-5">

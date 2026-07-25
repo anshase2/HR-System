@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Register from "../pages/auth/Register";
+
 // Auth
 import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 
 // Applicant Pages
 import Home from "../pages/applicant/Home";
@@ -18,9 +19,12 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Applicant */}
-        <Route path="/" element={<Login />} />
+
+        {/* Home */}
+        <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
+
+        {/* Applicant */}
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/profile" element={<Profile />} />
@@ -33,6 +37,7 @@ function AppRouter() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/applicants" element={<Applicants />} />
         <Route path="/analytics" element={<Analytics />} />
+
       </Routes>
     </BrowserRouter>
   );
