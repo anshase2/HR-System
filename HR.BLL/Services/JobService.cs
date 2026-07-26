@@ -1,21 +1,21 @@
 using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
-using System;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
+using HR.DAL.enums;
+using HR.DAL.IRepositories;
+using HR.DAL.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using HR.DAL.IRepositories;
-using HR.DAL.enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 
 namespace HR.BLL.Services
 {
@@ -24,12 +24,14 @@ namespace HR.BLL.Services
         private readonly IJobRepository _jobRepository;
         private readonly IApplicantRepository _applicantRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ISkillRepository _skillRepository;
 
-        public JobService(IJobRepository jobRepository, IApplicantRepository applicantRepository, UserManager<ApplicationUser> userManager)
+        public JobService(IJobRepository jobRepository, IApplicantRepository applicantRepository, UserManager<ApplicationUser> userManager, ISkillRepository skillRepository)
         {
             _jobRepository = jobRepository;
             _applicantRepository = applicantRepository;
             _userManager = userManager;
+            _skillRepository = skillRepository;
         }
 
 
@@ -68,16 +70,40 @@ namespace HR.BLL.Services
                 workplaceType = dto.WorkplaceType,
                 ExperienceLevel = dto.ExperienceLevel,
                 MinYearsOfExperience = dto.MinYearsOfExperience,
-                // map required skills (comma separated string) into Skill entities
-                RequiredSkills = dto.RequiredSkills?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Select(s => new Skill { Name = s })
-                    .ToList() ?? new List<Skill>(),
+               
                 PostedDate = System.DateTime.UtcNow,
                 ClosingDate = dto.ClosingDate,
                 IsActive = dto.IsActive,
                 CreatedById = userid,
                 CreatedBy = await _userManager.FindByIdAsync(userid.ToString())
             };
+            // ??? ???? ??? ??? Skills
+            if (!string.IsNullOrEmpty(dto.RequiredSkills))
+            {
+                var skillNames = dto.RequiredSkills
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList();
+
+
+                foreach (var name in skillNames)
+                {
+                    var skill = await _skillRepository.GetByNameAsync(name);
+
+
+                    if (skill == null)
+                    {
+                        skill = new Skill
+                        {
+                            Name = name
+                        };
+
+                        await _skillRepository.AddAsync(skill);
+                    }
+
+
+                    job.RequiredSkills.Add(skill);
+                }
+            }
 
             await _jobRepository.AddAsync(job);
             await _jobRepository.SaveChangesAsync();
