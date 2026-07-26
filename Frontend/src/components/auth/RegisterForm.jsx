@@ -64,7 +64,7 @@ const countryCodes = {
       </h1>
 
       <p className="text-gray-500 mt-2 mb-8">
-        Create your TalentAI account
+        Create your ITG account
       </p>
 
       {/* Full Name */}

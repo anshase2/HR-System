@@ -29,7 +29,7 @@ export default function LoginForm() {
       </h1>
 
       <p className="text-gray-500 mt-2 mb-8">
-        Sign in to your TalentAI account
+        Sign in to your ITG account
       </p>
 
       {/* Email */}
