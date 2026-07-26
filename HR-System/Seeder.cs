@@ -45,7 +45,8 @@ namespace HR.API
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
-                    FullName = "System Admin",
+                    FirstName = "System",
+                    LastName = "Admin",
                    // EmailConfirmed = true,
                     CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow)
                    

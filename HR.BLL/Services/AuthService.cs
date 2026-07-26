@@ -10,6 +10,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using HR.BLL.Constants;
+using HR.DAL.Entities;
 
 using HR.DAL.DatabaseContext;
 using System.Threading.Tasks;
@@ -65,9 +66,12 @@ namespace HR.BLL.Services
             }
             var applicant = new Applicant
             {
+                User = user,
                 UserId = user.Id,
-                Address = registerDto.Country,
-                LinkedInUrl = registerDto.LinkedInUrl
+
+             //   Address = registerDto.Country,
+              //  LinkedInUrl = registerDto.LinkedInUrl
+
             };
 
             _context.Applicants.Add(applicant);

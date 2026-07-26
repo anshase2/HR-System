@@ -21,10 +21,12 @@ namespace HR.BLL.DTOs
         public string Location { get; set; } = null!;
 
         public string EmploymentType { get; set; } = null!; // FullTime, PartTime...
+        public string WorkplaceType { get; set; } = null!;
+        public string ExperienceLevel { get; set; } = null!;
 
         public int MinYearsOfExperience { get; set; }
 
-        public string RequiredSkills { get; set; } = null!;
+        public List<string> RequiredSkills { get; set; } = new List<string>();
 
         public DateTime PostedDate { get; set; }
 

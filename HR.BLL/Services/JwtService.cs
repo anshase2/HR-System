@@ -40,7 +40,7 @@ namespace HR.BLL.Services
      new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), //JWT unique ID
      new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()), //Issued at (date and time of token generation)
      new Claim(ClaimTypes.NameIdentifier, user.Email), //Unique name identifier of the user (Email)
-     new Claim(ClaimTypes.Name, user.FullName) //Name of the user
+     new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}") //Name of the user
      };
 
             // Create a SymmetricSecurityKey object using the key specified in the configuration.

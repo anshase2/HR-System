@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HR.DAL.applicationState
+namespace HR.DAL.enums
 {
     public enum ApplicationStatus
     {

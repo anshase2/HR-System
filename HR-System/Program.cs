@@ -18,6 +18,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
+// Generic repository registration (IRepositories namespace)
+builder.Services.AddScoped(typeof(HR.DAL.IRepositories.IGenericRepository<>), typeof(HR.DAL.Repositories.GenericRepository<>));
+// Specific repositories
+builder.Services.AddScoped<HR.DAL.IRepositories.IJobRepository, HR.DAL.Repositories.JobRepository>();
+builder.Services.AddScoped<HR.DAL.IRepositories.IApplicationRepository, HR.DAL.Repositories.ApplicationRepository>();
+builder.Services.AddScoped<HR.DAL.IRepositories.IApplicantRepository, HR.DAL.Repositories.ApplicantRepository>();
+// Job repository
+builder.Services.AddScoped<HR.DAL.Repositories.IJobRepository, HR.DAL.Repositories.JobRepository>();
 
 // Add services to the container.
 

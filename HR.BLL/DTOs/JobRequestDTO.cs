@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HR.DAL.enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,13 +18,20 @@ namespace HR.BLL.DTOs
         public string Location { get; set; } = null!;
 
         public string EmploymentType { get; set; } = null!; // FullTime, PartTime...
+     public string WorkplaceType { get; set; } = null!; // OnSite, Remote, Hybrid
+
+   public string ExperienceLevel { get; set; } = null!; // EntryLevel, Junior, MidLevel, Senior...
 
         public int MinYearsOfExperience { get; set; }
+       // public ExperienceLevel ExperienceLevel { get; set; }
 
+        // comma separated skills (e.g. "C#,SQL,Azure")
         public string RequiredSkills { get; set; } = null!;
 
 
         public DateTime? ClosingDate { get; set; }
+
+        public bool IsActive { get; set; } = true;
     }
 
 }

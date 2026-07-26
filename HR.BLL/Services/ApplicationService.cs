@@ -1,9 +1,9 @@
 using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
-using HR.DAL.applicationState;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
+using HR.DAL.enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -28,7 +28,7 @@ namespace HR.BLL.Services
         {
             var applicantId = await _db.Applicants
         .Where(a => a.UserId == userID)
-        .Select(a => (int?)a.Id)
+        .Select(a => (int)a.Id)
         .FirstOrDefaultAsync();
 
             if (applicantId == null)
@@ -44,7 +44,7 @@ namespace HR.BLL.Services
 
             var alreadyApplied = await _db.Applications
                 .AnyAsync(a =>
-                    a.ApplicantId == applicantId.Value &&
+                    a.ApplicantId == applicantId &&
                     a.JobId == dto.JobId);
 
             if (alreadyApplied)
@@ -141,7 +141,7 @@ namespace HR.BLL.Services
                 Id = app.Id,
                 JobId = app.JobId,
                 ApplicantId = app.ApplicantId,
-                ApplicantEmail = app.ApplicantEmail,//.applicant.user.email,
+              //  ApplicantEmail = app.ApplicantEmail,//.applicant.user.email,
                 CoverLetter = app.CoverLetter,
                 ResumeUrl = app.ResumeUrl,
                 Status = app.Status,

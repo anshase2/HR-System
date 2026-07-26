@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HR.DAL.applicationState;
+using HR.DAL.enums;
 //guid applicant id
 namespace HR.BLL.DTOs
 {

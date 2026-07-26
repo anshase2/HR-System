@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HR.BLL.DTOs;
-using HR.DAL.applicationState;
+using HR.DAL.enums;
 
 namespace HR.BLL.Interfaces
 {
