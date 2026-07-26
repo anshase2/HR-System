@@ -24,7 +24,7 @@ namespace HR.BLL.DTOs
 
         public ApplicationStatus Status { get; set; }//enum for application status (e.g., Pending, Accepted, Rejected)
 
-        public string? ResumeUrl { get; set; }
+        public string? CvUrl { get; set; }
 
         public string? CoverLetter { get; set; }
         // new att will be added to the application entity in the database to store the analysis result.

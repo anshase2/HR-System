@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HR.DAL.enums;
 
 namespace HR.BLL.Interfaces
 {
@@ -11,15 +12,18 @@ namespace HR.BLL.Interfaces
     {
         Task<IEnumerable<JobResponseDTO>> GetAllAsync(string? department,
     string? location,
-    string? employmentType,
-    int? minExperience);
+    WorkplaceType? workplaceType,
+    EmploymentType? employmentType,
+    ExperienceLevel? experience);
 
-        Task<JobResponseDTO?> GetByIdAsync(int id);
+        Task<JobResponseDTO?> GetByIdAsync(int id);//get job by id
+        Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync();
 
         Task<JobResponseDTO> CreateAsync(JobRequestDTO dto, Guid userid);
-      //  Task<bool> UpdateAsync(int id, UpdateJobDto dto);
+
 
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId);
         Task<bool> UpdateAsync(int id, JobRequestDTO dto);
     }
 }

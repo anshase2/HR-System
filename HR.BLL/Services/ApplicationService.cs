@@ -143,7 +143,7 @@ namespace HR.BLL.Services
                 ApplicantId = app.ApplicantId,
               //  ApplicantEmail = app.ApplicantEmail,//.applicant.user.email,
                 CoverLetter = app.CoverLetter,
-                ResumeUrl = app.ResumeUrl,
+                CvUrl = app.CvUrl,
                 Status = app.Status,
                 AppliedAt = app.SubmittedAt
             };

@@ -82,7 +82,7 @@ namespace HR_System.Controllers
 
             
             
-                if (response.Errors != null && response.Errors.Any())
+                if (response?.Errors != null && response.Errors.Any())
                 {
                     return Problem(string.Join(" | ", response.Errors));
                 }

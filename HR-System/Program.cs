@@ -25,7 +25,6 @@ builder.Services.AddScoped<HR.DAL.IRepositories.IJobRepository, HR.DAL.Repositor
 builder.Services.AddScoped<HR.DAL.IRepositories.IApplicationRepository, HR.DAL.Repositories.ApplicationRepository>();
 builder.Services.AddScoped<HR.DAL.IRepositories.IApplicantRepository, HR.DAL.Repositories.ApplicantRepository>();
 // Job repository
-builder.Services.AddScoped<HR.DAL.Repositories.IJobRepository, HR.DAL.Repositories.JobRepository>();
 
 // Add services to the container.
 

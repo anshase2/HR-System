@@ -17,11 +17,13 @@ namespace HR.BLL.DTOs
 
         public string Location { get; set; } = null!;
 
-        public string EmploymentType { get; set; } = null!; // FullTime, PartTime...
+      /*  public string EmploymentType { get; set; } = null!; // FullTime, PartTime...
      public string WorkplaceType { get; set; } = null!; // OnSite, Remote, Hybrid
 
-   public string ExperienceLevel { get; set; } = null!; // EntryLevel, Junior, MidLevel, Senior...
-
+   public string ExperienceLevel { get; set; } = null!; // EntryLevel, Junior, MidLevel, Senior...*/
+        public EmploymentType EmploymentType { get; set; }
+        public WorkplaceType WorkplaceType { get; set; }
+        public ExperienceLevel ExperienceLevel { get; set; }
         public int MinYearsOfExperience { get; set; }
        // public ExperienceLevel ExperienceLevel { get; set; }
 

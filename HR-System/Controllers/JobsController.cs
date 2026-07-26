@@ -1,5 +1,6 @@
 ﻿using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
+using HR.DAL.enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,10 +21,12 @@ namespace HR_System.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<JobResponseDTO>>> GetAll(string? department,
     string? location,
-    string? employmentType,
-    int? minExperience)
+    EmploymentType? employmentType,
+    WorkplaceType? workplaceType,
+    ExperienceLevel? experience
+           )
         { 
-            return Ok(await _jobService.GetAllAsync(department, location, employmentType, minExperience));
+            return Ok(await _jobService.GetAllAsync(department, location, workplaceType,employmentType ,experience));
               
         }
 

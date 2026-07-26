@@ -7,6 +7,7 @@ using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using HR.DAL.IRepositories;
 using HR.DAL.enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
@@ -14,16 +15,17 @@ using System.Collections.Generic;
 using System.Linq;
 
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 
 namespace HR.BLL.Services
 {
     public class JobService : IJobService
     {
-        private readonly HR.DAL.IRepositories.IJobRepository _jobRepository;
-        private readonly HR.DAL.IRepositories.IApplicantRepository _applicantRepository;
+        private readonly IJobRepository _jobRepository;
+        private readonly IApplicantRepository _applicantRepository;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public JobService(HR.DAL.IRepositories.IJobRepository jobRepository, HR.DAL.IRepositories.IApplicantRepository applicantRepository, UserManager<ApplicationUser> userManager)
+        public JobService(IJobRepository jobRepository, IApplicantRepository applicantRepository, UserManager<ApplicationUser> userManager)
         {
             _jobRepository = jobRepository;
             _applicantRepository = applicantRepository;
@@ -33,18 +35,14 @@ namespace HR.BLL.Services
 
         public async Task<IEnumerable<JobResponseDTO>> GetAllAsync(string? department,
             string? location,
-            string? employmentType,
-            int? minExperience)
+            WorkplaceType? workplaceType,
+            EmploymentType? employmentType,
+            ExperienceLevel? experience
+           )
         {
-            // try parse incoming employmentType string as WorkplaceType (e.g. OnSite, Remote, Hybrid)
-            WorkplaceType? wpType = null;
-            if (!string.IsNullOrWhiteSpace(employmentType) &&
-                Enum.TryParse<HR.DAL.enums.WorkplaceType>(employmentType, true, out var parsedWp))
-            {
-                wpType = parsedWp;
-            }
+          
 
-            var jobs = await _jobRepository.FilterJobsAsync(department, location, wpType, minExperience);
+            var jobs = await _jobRepository.FilterJobsAsync(department, location,workplaceType , experience, employmentType);
             return jobs.Select(MapToDto).ToList();
         }
           public async Task<JobResponseDTO?> GetByIdAsync(int id)
@@ -66,9 +64,9 @@ namespace HR.BLL.Services
                 Department = dto.Department,
                 Location = dto.Location,
                 // parse enums from incoming strings (case-insensitive)
-                employmentType = Enum.TryParse<EmploymentType>(dto.EmploymentType, true, out var empType) ? empType : EmploymentType.FullTime,
-                workplaceType = Enum.TryParse<WorkplaceType>(dto.WorkplaceType, true, out var wpType) ? wpType : WorkplaceType.OnSite,
-                ExperienceLevel = Enum.TryParse<ExperienceLevel>(dto.ExperienceLevel, true, out var exLevel) ? exLevel : ExperienceLevel.EntryLevel,
+                employmentType = dto.EmploymentType,
+                workplaceType = dto.WorkplaceType,
+                ExperienceLevel = dto.ExperienceLevel,
                 MinYearsOfExperience = dto.MinYearsOfExperience,
                 // map required skills (comma separated string) into Skill entities
                 RequiredSkills = dto.RequiredSkills?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -138,12 +136,10 @@ namespace HR.BLL.Services
             job.Description = dto.Description;
             job.Department = dto.Department;
             job.Location = dto.Location;
-            // parse enums from incoming strings (case-insensitive)
-            job.employmentType = Enum.TryParse<EmploymentType>(dto.EmploymentType, true, out var empType) ? empType : job.employmentType;
-            if (!string.IsNullOrWhiteSpace(dto.WorkplaceType))
-                job.workplaceType = Enum.TryParse<WorkplaceType>(dto.WorkplaceType, true, out var wpType) ? wpType : job.workplaceType;
-            if (!string.IsNullOrWhiteSpace(dto.ExperienceLevel))
-                job.ExperienceLevel = Enum.TryParse<ExperienceLevel>(dto.ExperienceLevel, true, out var exLevel) ? exLevel : job.ExperienceLevel;
+            job.employmentType = dto.EmploymentType;
+            job.IsActive = dto.IsActive;
+            job.workplaceType = dto.WorkplaceType;
+            job.ExperienceLevel = dto.ExperienceLevel;
 
             job.MinYearsOfExperience = dto.MinYearsOfExperience;
             job.IsActive = dto.IsActive;

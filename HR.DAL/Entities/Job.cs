@@ -40,8 +40,9 @@ namespace HR.DAL.Entities
 
         public Guid CreatedById { get; set; } = Guid.Empty;
         public ApplicationUser CreatedBy { get; set; } = null!;
+        public ICollection<Skill> RequiredSkills { get; set; } = new List<Skill>();
 
-       /* public ICollection<Application> Applications { get; set; }
-            = new List<Application>();*/
+        /* public ICollection<Application> Applications { get; set; }
+             = new List<Application>();*/
     }
 }

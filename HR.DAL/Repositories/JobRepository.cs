@@ -18,7 +18,7 @@ namespace HR.DAL.Repositories
             _db = db;
         }
 
-        public async Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? employmentType, int? minExperience)
+        public async Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? workplaceType, ExperienceLevel? experience, EmploymentType? employmentType)
         {
             var query = _db.Jobs.AsQueryable();
 
@@ -28,10 +28,12 @@ namespace HR.DAL.Repositories
             if (!string.IsNullOrWhiteSpace(location))
                 query = query.Where(j => j.Location == location);
 
+            if (workplaceType.HasValue)
+                query = query.Where(j => j.workplaceType == workplaceType);
+            if (experience.HasValue)
+                query = query.Where(j => j.ExperienceLevel == experience);
             if (employmentType.HasValue)
-                query = query.Where(j => j.workplaceType == employmentType);
-            if (minExperience.HasValue)
-                query = query.Where(j => j.MinYearsOfExperience >= minExperience.Value);
+                query = query.Where(j => j.employmentType == employmentType);
 
             return await query.ToListAsync();
         }
