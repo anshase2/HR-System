@@ -28,6 +28,7 @@ namespace HR.BLL.Services
                 _environment.WebRootPath,
                 "uploads",
                 folderName);
+     
 
             if (!Directory.Exists(uploadFolder))
                 Directory.CreateDirectory(uploadFolder);
@@ -44,8 +45,13 @@ namespace HR.BLL.Services
             }
 
             // Return relative path
-            return Path.Combine("uploads", folderName, fileName)
-                .Replace("\\", "/");
+            /*    return Path.Combine("uploads", folderName, fileName)
+                    .Replace("\\", "/");*/
+            // Physical path for processing
+            return Path.Combine(
+                uploadFolder,
+                fileName
+            );
         }
 
         public Task DeleteFileAsync(string filePath)

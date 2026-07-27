@@ -19,6 +19,8 @@ builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+
 // Generic repository registration (IRepositories namespace)
 builder.Services.AddScoped(typeof(HR.DAL.IRepositories.IGenericRepository<>), typeof(HR.DAL.Repositories.GenericRepository<>));
 // Specific repositories
@@ -120,6 +122,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
 app.MapControllers();
 // Seed Data ??? ?
 using (var scope = app.Services.CreateScope())
