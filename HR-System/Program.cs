@@ -18,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
+builder.Services.AddScoped<IFileService, FileService>();
 // Generic repository registration (IRepositories namespace)
 builder.Services.AddScoped(typeof(HR.DAL.IRepositories.IGenericRepository<>), typeof(HR.DAL.Repositories.GenericRepository<>));
 // Specific repositories

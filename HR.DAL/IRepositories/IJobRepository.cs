@@ -1,5 +1,6 @@
 using HR.DAL.Entities;
 using HR.DAL.enums;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,5 +10,9 @@ namespace HR.DAL.IRepositories
     {
         Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? workplaceType, ExperienceLevel? experience, EmploymentType? employmentType);
         Task<Job?> GetJobWithCreatorAsync(int id);
+        Task<IEnumerable<Job>> GetActiveJobsAsync();
+        Task<IEnumerable<Job>> GetJobsByCreatorAsync(Guid emplyeeid);
+
+
     }
 }

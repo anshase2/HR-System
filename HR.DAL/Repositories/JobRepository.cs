@@ -38,6 +38,19 @@ namespace HR.DAL.Repositories
             return await query.ToListAsync();
         }
 
+        public async Task<IEnumerable<Job>> GetActiveJobsAsync()
+        {
+            
+            return await _db.Jobs.Where(j => j.IsActive).ToListAsync();
+        }
+
+        
+
+        public async Task<IEnumerable<Job>> GetJobsByCreatorAsync(Guid employeeId)
+        {
+            return await _db.Jobs.Include(j => j.CreatedBy).Where(j => j.CreatedById == employeeId).ToListAsync();
+        }
+
         public async Task<Job?> GetJobWithCreatorAsync(int id)
         {
             return await _db.Jobs

@@ -22,14 +22,12 @@ namespace HR.BLL.Services
     public class JobService : IJobService
     {
         private readonly IJobRepository _jobRepository;
-        private readonly IApplicantRepository _applicantRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ISkillRepository _skillRepository;
 
-        public JobService(IJobRepository jobRepository, IApplicantRepository applicantRepository, UserManager<ApplicationUser> userManager, ISkillRepository skillRepository)
+        public JobService(IJobRepository jobRepository,  UserManager<ApplicationUser> userManager, ISkillRepository skillRepository)
         {
             _jobRepository = jobRepository;
-            _applicantRepository = applicantRepository;
             _userManager = userManager;
             _skillRepository = skillRepository;
         }
@@ -76,7 +74,10 @@ namespace HR.BLL.Services
                 IsActive = dto.IsActive,
                 CreatedById = userid,
                 CreatedBy = await _userManager.FindByIdAsync(userid.ToString())
+
             };
+            if (job.CreatedBy == null)
+                throw new Exception("User not found");
             // ??? ???? ??? ??? Skills
             if (!string.IsNullOrEmpty(dto.RequiredSkills))
             {
@@ -143,14 +144,14 @@ namespace HR.BLL.Services
 
         public async Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync()
         {
-            var jobs = await _jobRepository.GetAllAsync();
-            return jobs.Where(j => j.IsActive).Select(MapToDto).ToList();
+            var jobs = await _jobRepository.GetActiveJobsAsync();
+            return jobs.Select(MapToDto).ToList();
         }
 
         public async Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId)
         {
-            var jobs = await _jobRepository.GetAllAsync();
-            return jobs.Where(j => j.CreatedById == employeeId).Select(MapToDto).ToList();
+            var jobs = await _jobRepository.GetJobsByCreatorAsync(employeeId);
+            return jobs.Select(MapToDto).ToList();
         }
 
         public async Task<bool> UpdateAsync(int id, JobRequestDTO dto)
@@ -173,12 +174,29 @@ namespace HR.BLL.Services
 
             // update skills: replace existing with new ones
             job.RequiredSkills.Clear();
-            if (!string.IsNullOrWhiteSpace(dto.RequiredSkills))
+
+            if (!string.IsNullOrEmpty(dto.RequiredSkills))
             {
-                var skills = dto.RequiredSkills.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Select(s => new Skill { Name = s });
-                foreach (var s in skills)
-                    job.RequiredSkills.Add(s);
+                var skillNames = dto.RequiredSkills
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList();
+
+                foreach (var name in skillNames)
+                {
+                    var skill = await _skillRepository.GetByNameAsync(name);
+
+                    if (skill == null)
+                    {
+                        skill = new Skill
+                        {
+                            Name = name
+                        };
+
+                        await _skillRepository.AddAsync(skill);
+                    }
+
+                    job.RequiredSkills.Add(skill);
+                }
             }
 
             _jobRepository.Update(job);
