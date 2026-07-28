@@ -1,6 +1,8 @@
 using HR.API;
 using HR.BLL.Interfaces;
+using HR.BLL.Interfaces.AiContracts;
 using HR.BLL.Services;
+using HR.BLL.Services.AiServices;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +22,12 @@ builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<IAIService, AIService>();
+
+builder.Services.AddScoped<IPromptService, PromptService>();
+
+builder.Services.AddScoped<ICVAnalysisService, CVAnalysisService>();
 
 // Generic repository registration (IRepositories namespace)
 builder.Services.AddScoped(typeof(HR.DAL.IRepositories.IGenericRepository<>), typeof(HR.DAL.Repositories.GenericRepository<>));

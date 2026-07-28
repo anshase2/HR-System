@@ -7,7 +7,7 @@ using Microsoft.VisualBasic;
 
 namespace HR.DAL.Entities
 {
-    public class CVanalysis
+    public class CVAnalysis
     {
         public int Id { get; set; }
         public int ApplicationId { get; set; }

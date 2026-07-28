@@ -1,8 +1,10 @@
 ﻿using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
 using HR.DAL.enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace HR_System.Controllers
@@ -40,11 +42,11 @@ namespace HR_System.Controllers
 
             return job;
         }
-
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create(JobRequestDTO dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
           //  if (userId == null)
             //    return Unauthorized();

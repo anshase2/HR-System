@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HR.BLL.DTOs.AiDTOs
+{
+    public class AIResponseDTO
+    {
+        public string Text { get; set; } = "";
+
+    }
+}

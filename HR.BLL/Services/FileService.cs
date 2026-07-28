@@ -44,10 +44,12 @@ namespace HR.BLL.Services
                 await file.CopyToAsync(stream);
             }
 
-            // Return relative path
+            // important relative path
             /*    return Path.Combine("uploads", folderName, fileName)
                     .Replace("\\", "/");*/
+
             // Physical path for processing
+
             return Path.Combine(
                 uploadFolder,
                 fileName
