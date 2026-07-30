@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HR.BLL.DTOs;
+using HR.BLL.DTOs.Auth;
 
 namespace HR.BLL.Interfaces
 {

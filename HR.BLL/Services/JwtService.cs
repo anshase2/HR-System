@@ -9,8 +9,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
+using HR.BLL.DTOs.Auth;
 
 namespace HR.BLL.Services
 {

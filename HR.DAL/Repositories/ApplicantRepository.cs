@@ -20,5 +20,7 @@ namespace HR.DAL.Repositories
         {
             return await _db.Applicants.FirstOrDefaultAsync(a => a.UserId == userId);
         }
+
+
     }
 }

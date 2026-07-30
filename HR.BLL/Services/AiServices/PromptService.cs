@@ -11,7 +11,7 @@ namespace HR.BLL.Services.AiServices
     public class PromptService: IPromptService
     {
         public string BuildPrompt(
-        Job job,
+        Job job,//jobdto
         string cvText)
         {
 

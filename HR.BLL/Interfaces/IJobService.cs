@@ -1,10 +1,10 @@
-﻿using HR.BLL.DTOs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HR.DAL.enums;
+using HR.BLL.DTOs.Job;
 
 namespace HR.BLL.Interfaces
 {
@@ -25,5 +25,7 @@ namespace HR.BLL.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId);
         Task<bool> UpdateAsync(int id, JobRequestDTO dto);
+        Task<JobResponseWithMoreDetailsDTO?> GetByIdWithDetailsAsync(int id);
+      //  Task<IEnumerable<JobResponseWithMoreDetailsDTO>> GetJobsByCreatorWithDetailsAsync(Guid employeeId);
     }
 }

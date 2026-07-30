@@ -1,9 +1,12 @@
-using HR.BLL.DTOs;
+using HR.BLL.DTOs.Job;
+using HR.BLL.DTOs.Auth;
+using HR.BLL.DTOs.Application;
 using HR.BLL.Interfaces;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
 using HR.DAL.enums;
+
 using HR.DAL.IRepositories;
 using HR.DAL.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -32,7 +35,15 @@ namespace HR.BLL.Services
             _skillRepository = skillRepository;
         }
 
-
+        /// <summary>
+        /// / Get all jobs with optional filtering for applicants by department, location, workplace type, employment type, and experience level.
+        /// </summary>
+        /// <param name="department"></param>
+        /// <param name="location"></param>
+        /// <param name="workplaceType"></param>
+        /// <param name="employmentType"></param>
+        /// <param name="experience"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<JobResponseDTO>> GetAllAsync(string? department,
             string? location,
             WorkplaceType? workplaceType,
@@ -45,12 +56,20 @@ namespace HR.BLL.Services
             var jobs = await _jobRepository.FilterJobsAsync(department, location,workplaceType , experience, employmentType);
             return jobs.Select(MapToDto).ToList();
         }
-          public async Task<JobResponseDTO?> GetByIdAsync(int id)
+      
+        public async Task<JobResponseDTO?> GetByIdAsync(int id) // Get job by ID without details for applicants
         {
-            var job = await _jobRepository.GetJobWithCreatorAsync(id);
+            var job = await _jobRepository.GetByIdAsync(id);
             if (job == null) return null;
             return MapToDto(job);
         }
+        public async Task<JobResponseWithMoreDetailsDTO?> GetByIdWithDetailsAsync(int id)// Get job by ID with details for admins
+        {
+            var job = await _jobRepository.GetByIdWithDetailsAsync(id);
+            if (job == null) return null;
+            return MapToJobResponseWithMoreDetailsDTO(job);
+        }
+
         public async Task<JobResponseDTO> CreateAsync(JobRequestDTO dto,Guid userid)
         {
 
@@ -76,8 +95,8 @@ namespace HR.BLL.Services
                 CreatedBy = await _userManager.FindByIdAsync(userid.ToString())
 
             };
-            if (job.CreatedBy == null)
-                throw new Exception("User not found");
+            if (job.CreatedById == Guid.Empty)
+                throw new Exception("User who ceated this job is not found");
             // ??? ???? ??? ??? Skills
             if (!string.IsNullOrEmpty(dto.RequiredSkills))
             {
@@ -120,27 +139,7 @@ namespace HR.BLL.Services
             return true;
         }
 
-        private JobResponseDTO MapToDto(Job job)
-        {
-            return new JobResponseDTO
-            {
-                Id = job.Id,
-                Title = job.Title,
-                Description = job.Description,
-                Department = job.Department,
-                Location = job.Location,
-                EmploymentType = job.employmentType.ToString(),
-                WorkplaceType = job.workplaceType.ToString(),
-                ExperienceLevel = job.ExperienceLevel.ToString(),
-                MinYearsOfExperience = job.MinYearsOfExperience,
-                RequiredSkills = job.RequiredSkills?.Select(s => s.Name).ToList() ?? new List<string>(),
-                PostedDate = job.PostedDate,
-                ClosingDate = job.ClosingDate,
-                IsActive = job.IsActive,
-                CreatedById = job.CreatedById.ToString(),
-                CreatedBy = job.CreatedBy
-            };
-        }
+
 
         public async Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync()
         {
@@ -148,7 +147,7 @@ namespace HR.BLL.Services
             return jobs.Select(MapToDto).ToList();
         }
 
-        public async Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId)
+        public async Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId /*user id for employee*/)
         {
             var jobs = await _jobRepository.GetJobsByCreatorAsync(employeeId);
             return jobs.Select(MapToDto).ToList();
@@ -205,6 +204,74 @@ namespace HR.BLL.Services
             return true;
         }
 
+
+        private JobResponseDTO MapToDto(Job job)
+        {
+            return new JobResponseDTO
+            {
+                Id = job.Id,
+                Title = job.Title,
+                Description = job.Description,
+                Department = job.Department,
+                Location = job.Location,
+                EmploymentType = job.employmentType.ToString(),
+                WorkplaceType = job.workplaceType.ToString(),
+                ExperienceLevel = job.ExperienceLevel.ToString(),
+                MinYearsOfExperience = job.MinYearsOfExperience,
+                RequiredSkills = job.RequiredSkills?.Select(s => s.Name).ToList() ?? new List<string>(),
+                PostedDate = job.PostedDate,
+                ClosingDate = job.ClosingDate,
+                IsActive = job.IsActive,
+                CreatedById = job.CreatedById.ToString(),
+               
+            };
+        }
+
+
+        private JobResponseWithMoreDetailsDTO MapToJobResponseWithMoreDetailsDTO(Job job)
+        {
+            return new JobResponseWithMoreDetailsDTO
+            {
+                Id = job.Id,
+                Title = job.Title,
+
+                Description = job.Description,
+                Department = job.Department,
+                Location = job.Location,
+                EmploymentType = job.employmentType.ToString(),
+                WorkplaceType = job.workplaceType.ToString(),
+                ExperienceLevel = job.ExperienceLevel.ToString(),
+                MinYearsOfExperience = job.MinYearsOfExperience,
+                RequiredSkills = job.RequiredSkills?.Select(s => s.Name).ToList() ?? new List<string>(),
+                PostedDate = job.PostedDate,
+                ClosingDate = job.ClosingDate,
+                IsActive = job.IsActive,
+                CreatedById = job.CreatedById.ToString(),
+
+                CreatedBy = new UserDTO
+                {
+                    Id = job.CreatedBy.Id.ToString(),
+                    FirstName = job.CreatedBy.FirstName,
+                    LastName = job.CreatedBy.LastName,
+                    Email = job.CreatedBy.Email
+                }
+
+                // Applications ... 
+                Applications = job.Applications.Select(a => new ApplicationResponseDTO
+                {
+                    Id = a.Id,
+                    JobId = a.JobId,
+                    ApplicantId = a.ApplicantId,
+                    ApplicantEmail = a.Applicant.User.Email,
+                    ApplicantName = $"{a.Applicant.User.FirstName} {a.Applicant.User.LastName}",
+                    SubmittedAt = a.SubmittedAt,
+                    Status = a.Status.ToString(),
+                    CvUrl = a.CvUrl,
+                    CoverLetter = a.CoverLetter
+
+                }).ToList()
+            }; 
+        }
 
     }
 }

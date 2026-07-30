@@ -34,28 +34,35 @@ namespace HR.DAL.Repositories
                 query = query.Where(j => j.ExperienceLevel == experience);
             if (employmentType.HasValue)
                 query = query.Where(j => j.employmentType == employmentType);
-
+            query.Include(j => j.RequiredSkills);
             return await query.ToListAsync();
         }
 
         public async Task<IEnumerable<Job>> GetActiveJobsAsync()
         {
             
-            return await _db.Jobs.Where(j => j.IsActive).ToListAsync();
+            return await _db.Jobs.Include(j => j.RequiredSkills).Where(j => j.IsActive).ToListAsync();
         }
 
-        
-
-        public async Task<IEnumerable<Job>> GetJobsByCreatorAsync(Guid employeeId)
-        {
-            return await _db.Jobs.Include(j => j.CreatedBy).Where(j => j.CreatedById == employeeId).ToListAsync();
-        }
-
-        public async Task<Job?> GetJobWithCreatorAsync(int id)
+        public async Task<Job?> GetByIdWithDetailsAsync(int id)
         {
             return await _db.Jobs
                 .Include(j => j.CreatedBy)
+                .Include(j => j.RequiredSkills)
+                .Include(j => j.Applications)
                 .FirstOrDefaultAsync(j => j.Id == id);
         }
-    }
+
+        public async Task<IEnumerable<Job>> GetJobsByCreatorAsync(Guid employeeId)
+        {
+            return await _db.Jobs.Include(j => j.CreatedBy).Include(j => j.RequiredSkills).Where(j => j.CreatedById == employeeId).ToListAsync();
+        }
+
+       /* public async Task<Job?> GetJobWithCreatorAsync(int id)
+        {
+            return await _db.Jobs
+                .Include(j => j.CreatedBy).Include(j=>j.RequiredSkills)
+                .FirstOrDefaultAsync(j => j.Id == id);
+      }*/   }
+   
 }

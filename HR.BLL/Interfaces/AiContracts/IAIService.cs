@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HR.BLL.DTOs.AiDTOs;
+using HR.BLL.DTOs.Ai;
 namespace HR.BLL.Interfaces.AiContracts
 {
     public interface IAIService

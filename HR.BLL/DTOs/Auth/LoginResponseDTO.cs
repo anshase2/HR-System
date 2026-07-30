@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HR.BLL.DTOs
+namespace HR.BLL.DTOs.Auth
 {
     public class LoginResponseDTO
     {

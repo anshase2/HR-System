@@ -1,5 +1,4 @@
-﻿using HR.BLL.DTOs;
-using HR.BLL.Services;
+﻿using HR.BLL.Services;
 using HR.BLL.Constants;
 
 using HR.DAL.Entities.Identity;
@@ -11,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 using HR.BLL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using HR.BLL.DTOs.Auth;
+using HR.BLL.DTOs.Applicant;
 
 namespace HR_System.Controllers
 {

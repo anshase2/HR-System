@@ -1,4 +1,4 @@
-﻿using HR.BLL.DTOs;
+﻿using HR.BLL.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;
 
 namespace HR.BLL.Interfaces

@@ -1,4 +1,4 @@
-﻿using HR.BLL.DTOs.AiDTOs;
+﻿using HR.BLL.DTOs.Ai;
 using HR.BLL.Interfaces.AiContracts;
 using Microsoft.Extensions.Configuration;
 using System;

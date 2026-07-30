@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HR.BLL.DTOs.AiDTOs
+namespace HR.BLL.DTOs.Ai
 {
-    public class AIRequestDTO
+    public class AIResponseDTO
     {
-        public string Prompt { get; set; } = "";
+        public string Text { get; set; } = "";
 
     }
 }

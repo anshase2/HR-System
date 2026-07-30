@@ -11,13 +11,14 @@ namespace HR.DAL.Entities
     {
         public int Id { get; set; }
         public int JobId { get; set; }
-        public int UserId { get; set; }  
         public int ApplicantId { get; set; }
+
         public string CvUrl { get; set; } = string.Empty;
         public string? CoverLetter { get; set; }
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
-
-
+        public Applicant Applicant { get; set; } = null!;
+        public Job Job { get; set; } = null!;
+        public CVAnalysis? CVAnalysis { get; set; }
     }
 }

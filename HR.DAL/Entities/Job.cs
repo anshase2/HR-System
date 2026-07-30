@@ -42,7 +42,7 @@ namespace HR.DAL.Entities
         public ApplicationUser CreatedBy { get; set; } = null!;
         public ICollection<Skill> RequiredSkills { get; set; } = new List<Skill>();
 
-        /* public ICollection<Application> Applications { get; set; }
-             = new List<Application>();*/
+         public ICollection<Application> Applications { get; set; }
+             = new List<Application>();
     }
 }

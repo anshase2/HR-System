@@ -14,6 +14,7 @@ using HR.DAL.Entities;
 
 using HR.DAL.DatabaseContext;
 using System.Threading.Tasks;
+using HR.BLL.DTOs.Auth;
 
 
 

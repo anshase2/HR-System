@@ -21,5 +21,10 @@ namespace HR.DAL.Repositories
         {
             return await _db.Applications.Where(a => a.ApplicantId == applicantId).ToListAsync();
         }
+        //implement method to get Application by jobid
+        public async Task<IEnumerable<Application>> GetByJobIdAsync(int jobId)
+        {
+            return await _db.Applications.Where(a => a.JobId == jobId).ToListAsync();
+        }
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HR.BLL.DTOs
+namespace HR.BLL.DTOs.Job
 {
     public class JobRequestDTO
     {
@@ -23,6 +23,7 @@ namespace HR.BLL.DTOs
    public string ExperienceLevel { get; set; } = null!; // EntryLevel, Junior, MidLevel, Senior...*/
         public EmploymentType EmploymentType { get; set; }
         public WorkplaceType WorkplaceType { get; set; }
+
         public ExperienceLevel ExperienceLevel { get; set; }
         public int MinYearsOfExperience { get; set; }
        // public ExperienceLevel ExperienceLevel { get; set; }

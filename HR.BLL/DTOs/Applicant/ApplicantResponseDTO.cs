@@ -1,7 +1,7 @@
 ﻿using HR.DAL.Entities.Identity;
 using System;
 
-namespace HR.BLL.DTOs
+namespace HR.BLL.DTOs.Applicant
 {
     public class ApplicantResponseDTO
     {

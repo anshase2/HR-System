@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HR.BLL.DTOs.AiDTOs
+namespace HR.BLL.DTOs.Ai
 {
     public class CVAnalysisDTO
     {

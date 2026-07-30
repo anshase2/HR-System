@@ -1,4 +1,4 @@
-﻿using HR.BLL.DTOs;
+﻿using HR.BLL.DTOs.Job;
 using HR.BLL.Interfaces;
 using HR.DAL.enums;
 using Microsoft.AspNetCore.Authorization;
@@ -46,10 +46,10 @@ namespace HR_System.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(JobRequestDTO dto)
         {
-            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-          //  if (userId == null)
-            //    return Unauthorized();
+           //if (userId == null)
+              //  return Unauthorized();
             var job = await _jobService.CreateAsync(dto, Guid.Parse(userId));
             return CreatedAtAction(nameof(Get),
                 new { id = job.Id },

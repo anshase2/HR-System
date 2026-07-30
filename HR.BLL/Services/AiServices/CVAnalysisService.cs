@@ -63,9 +63,13 @@ namespace HR.BLL.Services.AiServices
 
 
             // Create Prompt
+            var job = await _jobRepository.GetByIdAsync(application.JobId);
+
+            if (job == null)
+                throw new Exception("Job not found");
             var prompt =
                 _promptService.BuildPrompt(
-                    await _jobRepository.GetByIdAsync(application.JobId), //Job
+                    job,
                     resumeText);
 
 
@@ -92,6 +96,7 @@ namespace HR.BLL.Services.AiServices
 
 
             await _repository.AddAsync(analysis);
+            await _repository.SaveChangesAsync();
 
         }
     }

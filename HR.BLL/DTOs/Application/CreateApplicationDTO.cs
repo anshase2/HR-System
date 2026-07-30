@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace HR.BLL.DTOs
+namespace HR.BLL.DTOs.Application
 {
     public class CreateApplicationDTO
     {

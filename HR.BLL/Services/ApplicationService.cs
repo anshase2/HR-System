@@ -1,4 +1,4 @@
-using HR.BLL.DTOs;
+using HR.BLL.DTOs.Application;
 using HR.BLL.Interfaces;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
@@ -144,8 +144,8 @@ namespace HR.BLL.Services
               //  ApplicantEmail = app.ApplicantEmail,//.applicant.user.email,
                 CoverLetter = app.CoverLetter,
                 CvUrl = app.CvUrl,
-                Status = app.Status,
-                AppliedAt = app.SubmittedAt
+                Status = app.Status.ToString(),
+                SubmittedAt = app.SubmittedAt
             };
         }
 
