@@ -8,7 +8,7 @@ namespace HR.DAL.IRepositories
 {
     public interface IJobRepository : IGenericRepository<Job>
     {
-        Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? workplaceType, ExperienceLevel? experience, EmploymentType? employmentType);
+        Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? workplaceType, ExperienceLevel? experience, EmploymentType? employmentType, bool? isActive);
        // Task<Job?> GetJobWithCreatorAsync(int id);
         Task<IEnumerable<Job>> GetActiveJobsAsync();
         Task<IEnumerable<Job>> GetJobsByCreatorAsync(Guid employeeId);

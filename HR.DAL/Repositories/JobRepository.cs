@@ -18,7 +18,7 @@ namespace HR.DAL.Repositories
             _db = db;
         }
 
-        public async Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? workplaceType, ExperienceLevel? experience, EmploymentType? employmentType)
+        public async Task<IEnumerable<Job>> FilterJobsAsync(string? department, string? location, WorkplaceType? workplaceType, ExperienceLevel? experience, EmploymentType? employmentType, bool? isActive)
         {
             var query = _db.Jobs.AsQueryable();
 
@@ -35,6 +35,8 @@ namespace HR.DAL.Repositories
             if (employmentType.HasValue)
                 query = query.Where(j => j.employmentType == employmentType);
             query.Include(j => j.RequiredSkills);
+            if (isActive.HasValue)
+                query = query.Where(j => j.IsActive == isActive.Value);
             return await query.ToListAsync();
         }
 

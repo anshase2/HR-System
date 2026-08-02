@@ -8,7 +8,10 @@ namespace HR.DAL.enums
 {
     public enum Role
     {
-        User = 1,
-        Admin = 2
+        Applicant = 1,
+        Admin = 2,
+        HR_Employee = 3
+
+
     }
 }

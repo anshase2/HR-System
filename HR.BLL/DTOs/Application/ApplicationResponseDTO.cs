@@ -14,6 +14,7 @@ namespace HR.BLL.DTOs.Application
     {
         public int Id { get; set; }
         public int JobId { get; set; }
+        public string JobName { get; set; } = string.Empty;
         public int ApplicantId { get; set; }
         public string ApplicantEmail { get; set; } = string.Empty;
         public string ApplicantName { get; set; } = string.Empty;

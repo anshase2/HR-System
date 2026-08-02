@@ -1,5 +1,6 @@
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
+using HR.DAL.enums;
 using HR.DAL.IRepositories;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -19,12 +20,41 @@ namespace HR.DAL.Repositories
 
         public async Task<IEnumerable<Application>> GetByApplicantIdAsync(int applicantId)
         {
-            return await _db.Applications.Where(a => a.ApplicantId == applicantId).ToListAsync();
+            return await _db.Applications.Include(a => a.Job).Where(a => a.ApplicantId == applicantId).ToListAsync();
         }
         //implement method to get Application by jobid
         public async Task<IEnumerable<Application>> GetByJobIdAsync(int jobId)
         {
-            return await _db.Applications.Where(a => a.JobId == jobId).ToListAsync();
+            return await _db.Applications.Include(a => a.Job)
+                .Include(a => a.JobId)
+                .Include(a => a.Applicant)
+                .ThenInclude(a => a.User)
+                .Where(a => a.JobId == jobId).ToListAsync();
+        }
+        public async Task<Application?> GetApplicationByIdAsync(int id)
+        {
+            return await _db.Applications
+                .Include(a => a.Applicant)
+                .ThenInclude(a => a.User)
+                .Include(a => a.Job)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+        public async Task<IEnumerable<Application>> GetAllApplicationsAsync()
+        {
+            return await _db.Applications
+                .Include(a => a.Applicant)
+                .ThenInclude(a => a.User)
+                .Include(a => a.Job)
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<Application>> GetApplicationsByStatusAsync(ApplicationStatus status)
+        {
+            return await _db.Applications
+                .Include(a => a.Applicant)
+                .ThenInclude(a => a.User)
+                .Include(a => a.Job)
+                .Where(a => a.Status == status)
+                .ToListAsync();
         }
     }
 }

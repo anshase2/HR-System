@@ -25,17 +25,26 @@ namespace HR_System.Controllers
     string? location,
     EmploymentType? employmentType,
     WorkplaceType? workplaceType,
-    ExperienceLevel? experience
+    ExperienceLevel? experience,
+    bool? isActive
            )
         { 
-            return Ok(await _jobService.GetAllAsync(department, location, workplaceType,employmentType ,experience));
+            return Ok(await _jobService.GetAllAsync(department, location, workplaceType,employmentType ,experience, isActive));
               
         }
+        [HttpGet("active")]
+        public async Task<ActionResult<IEnumerable<JobResponseDTO>>> GetActiveJobs()
+        {
+            var jobs = await _jobService.GetActiveJobsAsync();
+
+            return Ok(jobs);
+        }
+
 
         [HttpGet("{id}")]
         public async Task<ActionResult<JobResponseDTO>> Get(int id)
         {
-            var job = await _jobService.GetByIdAsync(id);
+            var job = await _jobService.GetByIdWithDetailsAsync(id);
 
             if (job == null)
                 return NotFound();

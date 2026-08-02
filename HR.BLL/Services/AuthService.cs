@@ -1,5 +1,6 @@
 ﻿using HR.BLL.DTOs;
 using HR.BLL.Interfaces;
+using HR.BLL.DTOs.Applicant;
 using HR.DAL.Entities.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,7 @@ using HR.DAL.Entities;
 using HR.DAL.DatabaseContext;
 using System.Threading.Tasks;
 using HR.BLL.DTOs.Auth;
+using HR.DAL.enums;
 
 
 
@@ -99,6 +101,14 @@ namespace HR.BLL.Services
        
         public async Task<CreateEmplyeeResponseDTO> CreateEmployeeAsync(CreateEmplyeeRequestDTO registerDto)
         {
+            if(registerDto.Role!!= UserRoles.Admin && registerDto.Role != UserRoles.Employee)
+            {
+                return new CreateEmplyeeResponseDTO
+                {
+                    Message = "Invalid role specified",
+                    Errors = new List<string> { "Role must be Admin, HR, or Manager" }
+                };
+            }
             ApplicationUser user = new ApplicationUser()
             {
                 
@@ -123,7 +133,7 @@ namespace HR.BLL.Services
                 };
             }
 
-            await _userManager.AddToRoleAsync(user, UserRoles.Employee);
+            await _userManager.AddToRoleAsync(user, registerDto.Role.ToString());
 
             return new CreateEmplyeeResponseDTO
             {

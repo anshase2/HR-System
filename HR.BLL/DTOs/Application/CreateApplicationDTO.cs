@@ -19,7 +19,7 @@ namespace HR.BLL.DTOs.Application
         public int ApplicantId { get; set; }
 
         public string? CoverLetter { get; set; }
-
-        public IFormFile? Resume { get; set; }
+        [Required(ErrorMessage = "CV can't be blank")]
+        public IFormFile? CvUrl { get; set; }
     }
 }

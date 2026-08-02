@@ -15,140 +15,183 @@ namespace HR.BLL.Services
 {
     public class ApplicationService : IApplicationService
     {
-        private readonly ApplicationDbContext _db;
+        private readonly HR.DAL.IRepositories.IApplicationRepository _applicationRepository;
+        private readonly HR.DAL.IRepositories.IApplicantRepository _applicantRepository;
+        private readonly HR.DAL.IRepositories.IJobRepository _jobRepository;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ApplicationService(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        public ApplicationService(HR.DAL.IRepositories.IApplicationRepository applicationRepository,
+            HR.DAL.IRepositories.IApplicantRepository applicantRepository,
+            HR.DAL.IRepositories.IJobRepository jobRepository,
+            UserManager<ApplicationUser> userManager)
         {
-            _db = db;
+            _applicationRepository = applicationRepository;
+            _applicantRepository = applicantRepository;
+            _jobRepository = jobRepository;
             _userManager = userManager;
         }
 
-        public async Task<ApplicationResponseDTO> ApplyAsync(CreateApplicationDTO dto,Guid userID)
+        public async Task<ApplicationResponseForApplicantDTO> ApplyAsync(CreateApplicationDTO dto, Guid userID)
         {
-            var applicantId = await _db.Applicants
-        .Where(a => a.UserId == userID)
-        .Select(a => (int)a.Id)
-        .FirstOrDefaultAsync();
-
-            if (applicantId == null)
+            var applicant = await _applicantRepository.GetByUserIdAsync(userID);
+            if (applicant == null)
                 throw new KeyNotFoundException("Applicant profile not found.");
 
-
-            var jobExists = await _db.Jobs
-                .AnyAsync(j => j.Id == dto.JobId);
-
-            if (!jobExists)
+            var job = await _jobRepository.GetByIdAsync(dto.JobId);
+            if (job == null)
                 throw new KeyNotFoundException("Job not found.");
 
-
-            var alreadyApplied = await _db.Applications
-                .AnyAsync(a =>
-                    a.ApplicantId == applicantId &&
-                    a.JobId == dto.JobId);
-
-            if (alreadyApplied)
+            var existing = await _applicationRepository.GetByApplicantIdAsync(applicant.Id);
+            if (existing.Any(a => a.JobId == dto.JobId))
                 throw new InvalidOperationException("You already applied for this job.");
-
-        
 
             var application = new HR.DAL.Entities.Application
             {
                 JobId = dto.JobId,
-                ApplicantId = applicantId,
+                ApplicantId = applicant.Id,
                 CoverLetter = dto.CoverLetter,
+                CvUrl = dto.CvUrl.ToString(),
                 SubmittedAt = DateTime.UtcNow,
                 Status = ApplicationStatus.Pending,
+
             };
 
-            _db.Applications.Add(application);
-            await _db.SaveChangesAsync();
+            await _applicationRepository.AddAsync(application);
+            await _applicationRepository.SaveChangesAsync();
 
-            return MapToDto(application);
+            return await MapToDtoForApplicantAsync(application);
         }
 
         public async Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync()
         {
-            var apps = await _db.Applications.ToListAsync();
-            return apps.Select(MapToDto).ToList();
+            var apps = await _applicationRepository.GetAllApplicationsAsync();
+            var list = new List<ApplicationResponseDTO>();
+            foreach (var app in apps)
+            {
+                list.Add(await MapToDtoAsync(app));
+            }
+            return list;
         }
-
+        /// <summary>
+        ///     return application for Hr Employee        
+        /// </summary>
+        /// <param name="id">ApplicationId</param>
+        /// <returns></returns>
         public async Task<ApplicationResponseDTO?> GetByIdAsync(int id)
         {
-            var app = await _db.Applications.FindAsync(id);
+            var app = await _applicationRepository.GetApplicationByIdAsync(id);
             if (app == null) return null;
-            return MapToDto(app);
+            return await MapToDtoAsync(app);
         }
 
         public async Task<IEnumerable<ApplicationResponseDTO>> GetByJobIdAsync(int jobId)
         {
-            var apps = await _db.Applications.Where(a => a.JobId == jobId).ToListAsync();
-            return apps.Select(MapToDto).ToList();
+            var apps = await _applicationRepository.GetByJobIdAsync(jobId);
+            var list = new List<ApplicationResponseDTO>();
+            foreach (var app in apps)
+                list.Add(await MapToDtoAsync(app));
+            return list;
         }
 
-        /*public async Task<IEnumerable<ApplicationResponseDTO>> GetByApplicantAsync(string email)
-         {
-             var apps = await _db.Applications.Where(a => a.ApplicantEmail == email).ToListAsync();
-             return apps.Select(MapToDto).ToList();
-         }*/
-        public async Task<IEnumerable<ApplicationResponseDTO>> GetApplicationsByApplicantAsync(Guid userId)
+        
+        /// <summary>
+        ///  return applications for applicant by userId   
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public async Task<IEnumerable<ApplicationResponseForApplicantDTO>> GetApplicationsByApplicantAsync(Guid userId)
         {
-            var applicant = await _db.Applicants
-              .FirstOrDefaultAsync(a => a.UserId == userId);
 
+            var applicant = await _applicantRepository.GetByUserIdAsync(userId);
             if (applicant == null)
                 throw new KeyNotFoundException("Applicant not found for this user.");
 
-            var applications = await _db.Applications
-                .Where(a => a.ApplicantId == applicant.Id)
-                .ToListAsync();
-
-            return applications.Select(MapToDto);
-
-
-
+            var applications = await _applicationRepository.GetByApplicantIdAsync(applicant.Id);
+            var list = new List<ApplicationResponseForApplicantDTO>();
+            foreach (var app in applications)
+                list.Add(await MapToDtoForApplicantAsync(app));
+            return list;
         }
 
 
         public async Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status)
         {
-            var app = await _db.Applications.FindAsync(applicationId);
+            var app = await _applicationRepository.GetByIdAsync(applicationId);
             if (app == null) return false;
             app.Status = status;
-            _db.Applications.Update(app);
-            await _db.SaveChangesAsync();
+            _applicationRepository.Update(app);
+            await _applicationRepository.SaveChangesAsync();
             return true;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var app = await _db.Applications.FindAsync(id);
+            var app = await _applicationRepository.GetByIdAsync(id);
             if (app == null) return false;
-            _db.Applications.Remove(app);
-            await _db.SaveChangesAsync();
+            _applicationRepository.Delete(app);
+            await _applicationRepository.SaveChangesAsync();
             return true;
         }
-   public async Task<ApplicationResponseDTO?> GetByApplicationIdAsync(int id)
+        /// <summary>
+        /// return application for Hr Employee by applicationId
+        /// </summary>
+        /// <param name="id">ApplicationId</param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public async Task<ApplicationResponseDTO?> GetByApplicationIdAsync(int id)
         {
-            var app = await _db.Applications.FindAsync(id);
+            var app = await _applicationRepository.GetApplicationByIdAsync(id);
             if (app == null) throw new KeyNotFoundException("Application not found.");
-            return MapToDto(app);
+            return   await MapToDtoAsync(app);
+           
         }
-        private ApplicationResponseDTO MapToDto(HR.DAL.Entities.Application app)
+        /// <summary>
+        /// return application for applicant by applicationId
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+
+        public async Task<ApplicationResponseForApplicantDTO?> GetByApplicationIdForApplicantAsync(int id)
         {
+            var app = await _applicationRepository.GetByIdAsync(id);
+            if (app == null) throw new KeyNotFoundException("Application not found.");
+            return await MapToDtoForApplicantAsync(app);
+
+        }
+
+        private async Task<ApplicationResponseDTO> MapToDtoAsync(HR.DAL.Entities.Application app)
+        {
+            var applicant = await _applicantRepository.GetByIdAsync(app.ApplicantId);
+            var user = applicant == null ? null : await _userManager.FindByIdAsync(applicant.UserId.ToString());
+            var job = await _jobRepository.GetByIdAsync(app.JobId);
+
             return new ApplicationResponseDTO
             {
                 Id = app.Id,
                 JobId = app.JobId,
+                ApplicantEmail = user.Email ,
+                ApplicantName = user == null ? string.Empty : $"{user.FirstName} {user.LastName}",
+                JobName = job?.Title ?? string.Empty,
                 ApplicantId = app.ApplicantId,
-              //  ApplicantEmail = app.ApplicantEmail,//.applicant.user.email,
                 CoverLetter = app.CoverLetter,
                 CvUrl = app.CvUrl,
                 Status = app.Status.ToString(),
                 SubmittedAt = app.SubmittedAt
             };
         }
-
-     
+        private async Task<ApplicationResponseForApplicantDTO> MapToDtoForApplicantAsync(HR.DAL.Entities.Application app)
+        {
+            var job = await _jobRepository.GetByIdAsync(app.JobId);
+            return new ApplicationResponseForApplicantDTO
+            {
+                Id = app.Id,
+                JobId = app.JobId,
+                JobTitle = job?.Title ?? string.Empty,
+                SubmittedAt = app.SubmittedAt,
+                Status = app.Status.ToString()
+            };
+        }
     }
 }

@@ -14,7 +14,8 @@ namespace HR.BLL.Interfaces
     string? location,
     WorkplaceType? workplaceType,
     EmploymentType? employmentType,
-    ExperienceLevel? experience);
+    ExperienceLevel? experience,
+    bool? isActive);
 
         Task<JobResponseDTO?> GetByIdAsync(int id);//get job by id
         Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync();
@@ -25,7 +26,7 @@ namespace HR.BLL.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId);
         Task<bool> UpdateAsync(int id, JobRequestDTO dto);
-        Task<JobResponseWithMoreDetailsDTO?> GetByIdWithDetailsAsync(int id);
+        Task<JobResponseDTO?> GetByIdWithDetailsAsync(int id);
       //  Task<IEnumerable<JobResponseWithMoreDetailsDTO>> GetJobsByCreatorWithDetailsAsync(Guid employeeId);
     }
 }

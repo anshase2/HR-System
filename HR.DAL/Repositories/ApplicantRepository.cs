@@ -18,7 +18,7 @@ namespace HR.DAL.Repositories
 
         public async Task<Applicant?> GetByUserIdAsync(Guid userId)
         {
-            return await _db.Applicants.FirstOrDefaultAsync(a => a.UserId == userId);
+            return await _db.Applicants.Include(a => a.User).FirstOrDefaultAsync(a => a.UserId == userId);
         }
 
 

@@ -48,12 +48,14 @@ namespace HR.BLL.Services
             string? location,
             WorkplaceType? workplaceType,
             EmploymentType? employmentType,
-            ExperienceLevel? experience
+            ExperienceLevel? experience,
+            bool? isActive=true
+
            )
         {
           
 
-            var jobs = await _jobRepository.FilterJobsAsync(department, location,workplaceType , experience, employmentType);
+            var jobs = await _jobRepository.FilterJobsAsync(department, location,workplaceType , experience, employmentType, isActive);
             return jobs.Select(MapToDto).ToList();
         }
       
@@ -63,11 +65,12 @@ namespace HR.BLL.Services
             if (job == null) return null;
             return MapToDto(job);
         }
-        public async Task<JobResponseWithMoreDetailsDTO?> GetByIdWithDetailsAsync(int id)// Get job by ID with details for admins
+        //
+        public async Task<JobResponseDTO?> GetByIdWithDetailsAsync(int id)// Get job by ID with details for admins
         {
             var job = await _jobRepository.GetByIdWithDetailsAsync(id);
             if (job == null) return null;
-            return MapToJobResponseWithMoreDetailsDTO(job);
+            return MapToDto(job);
         }
 
         public async Task<JobResponseDTO> CreateAsync(JobRequestDTO dto,Guid userid)
@@ -155,7 +158,7 @@ namespace HR.BLL.Services
 
         public async Task<bool> UpdateAsync(int id, JobRequestDTO dto)
         {
-            var job = await _jobRepository.GetByIdAsync(id);
+            var job = await _jobRepository.GetByIdWithDetailsAsync(id);
             if (job == null) return false;
 
             job.Title = dto.Title;
@@ -254,7 +257,7 @@ namespace HR.BLL.Services
                     FirstName = job.CreatedBy.FirstName,
                     LastName = job.CreatedBy.LastName,
                     Email = job.CreatedBy.Email
-                }
+                },
 
                 // Applications ... 
                 Applications = job.Applications.Select(a => new ApplicationResponseDTO

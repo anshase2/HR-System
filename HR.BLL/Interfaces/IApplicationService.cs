@@ -11,7 +11,7 @@ namespace HR.BLL.Interfaces
 {
     public interface IApplicationService
     {
-        Task<ApplicationResponseDTO> ApplyAsync(CreateApplicationDTO dto,Guid userId);
+        Task<ApplicationResponseForApplicantDTO> ApplyAsync(CreateApplicationDTO dto,Guid userId);
 
         Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync();
 
@@ -19,7 +19,7 @@ namespace HR.BLL.Interfaces
 
         Task<IEnumerable<ApplicationResponseDTO>> GetByJobIdAsync(int jobId);
 
-        Task<IEnumerable<ApplicationResponseDTO>> GetApplicationsByApplicantAsync(Guid userId);
+        Task<IEnumerable<ApplicationResponseForApplicantDTO>> GetApplicationsByApplicantAsync(Guid userId);
 
         Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status);
 
