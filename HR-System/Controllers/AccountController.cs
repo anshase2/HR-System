@@ -44,8 +44,8 @@ namespace HR_System.Controllers
         /// <returns></returns>
         ///
         // [Authorize(Roles = "Admin")]
-        [AllowAnonymous]
         [HttpPost("create-employee")]
+        [Authorize(Roles = $"{UserRoles.Admin}")]
 
         public async Task<ActionResult<CreateEmplyeeResponseDTO>> PostCreateEmployee(CreateEmplyeeRequestDTO registerDTO)
         {
@@ -120,6 +120,7 @@ namespace HR_System.Controllers
         /// </summary>
         /// <param name="loginDTO"></param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDTO>> PostLogin(LoginDTO loginDTO)
         {
@@ -140,14 +141,15 @@ namespace HR_System.Controllers
         }
 
 
-          
-        
+
+
 
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
+        [Authorize]        
         [HttpGet("logout")]
         public async Task<IActionResult> GetLogout()
         {

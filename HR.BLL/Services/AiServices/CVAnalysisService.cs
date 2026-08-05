@@ -1,4 +1,5 @@
-﻿using HR.BLL.Interfaces;
+﻿using HR.BLL.DTOs.Ai;
+using HR.BLL.Interfaces;
 using HR.BLL.Interfaces.AiContracts;
 using HR.DAL.Entities;
 using HR.DAL.IRepositories;
@@ -38,15 +39,11 @@ namespace HR.BLL.Services.AiServices
 
 
 
-        public async Task AnalyzeApplicationAsync(
-            int applicationId)
+        public async Task<CVAnalysis>AnalyzeApplicationAsync(
+            Application application)
         {
 
-            // Get Application
-            var application =
-                await _applicationRepository
-                .GetByIdAsync(applicationId);
-
+          
 
             if (application == null)
                 throw new Exception(
@@ -84,19 +81,29 @@ namespace HR.BLL.Services.AiServices
             // Save result
             var analysis = new CVAnalysis
             {
-                ApplicationId = applicationId,
+              //  ApplicationId = application.Id,
 
-                ResumeText = resumeText,
 
                 MatchPercentage = aiResult.MatchPercentage,
 
                 AiEvaluationSummary =
-                    aiResult.AiEvaluationSummary
+                    aiResult.AiEvaluationSummary,
+                MatchedSkills = string.Join(", ", aiResult.MatchedSkills),
+                Recommendation = aiResult.Recommendation
             };
 
 
-            await _repository.AddAsync(analysis);
-            await _repository.SaveChangesAsync();
+           // await _repository.AddAsync(analysis);
+            //await _repository.SaveChangesAsync();
+            return new CVAnalysis
+            {
+               
+                MatchPercentage = analysis.MatchPercentage,
+                AiEvaluationSummary = analysis.AiEvaluationSummary,
+                MatchedSkills = analysis.MatchedSkills,
+                Recommendation = analysis.Recommendation,
+                ApplicationId = analysis.ApplicationId
+            };
 
         }
     }

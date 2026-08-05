@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HR.BLL.DTOs.Ai;
+using HR.DAL.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +10,7 @@ namespace HR.BLL.Interfaces.AiContracts
 {
     public interface ICVAnalysisService
     {
-        Task AnalyzeApplicationAsync(int applicationId);
+        Task<CVAnalysis> AnalyzeApplicationAsync(Application application);
 
     }
 }

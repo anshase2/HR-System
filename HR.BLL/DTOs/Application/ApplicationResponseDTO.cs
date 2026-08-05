@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HR.DAL.enums;
+using HR.BLL.DTOs.Ai;
 //guid applicant id
 namespace HR.BLL.DTOs.Application
 {
@@ -24,5 +25,6 @@ namespace HR.BLL.DTOs.Application
 
         public string? CoverLetter { get; set; }
         // new att will be added to the application entity in the database to store the analysis result.
+        public CVAnalysisDTO? CVAnalysis { get; set; }= new CVAnalysisDTO(); //new property to hold the analysis result
     }
 }

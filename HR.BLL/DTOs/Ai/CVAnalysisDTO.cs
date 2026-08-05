@@ -13,7 +13,7 @@ namespace HR.BLL.DTOs.Ai
         public decimal MatchPercentage { get; set; }//score of how well the CV matches the job description
 
         public string AiEvaluationSummary { get; set; } = string.Empty;
-        public string MatchedSkills { get; set; } = string.Empty;
+        public List<string> MatchedSkills { get; set; } = new();
         public string Recommendation { get; set; } = string.Empty;
     }
 }

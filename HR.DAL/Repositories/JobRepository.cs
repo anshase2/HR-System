@@ -43,7 +43,7 @@ namespace HR.DAL.Repositories
         public async Task<IEnumerable<Job>> GetActiveJobsAsync()
         {
             
-            return await _db.Jobs.Include(j => j.RequiredSkills).Where(j => j.IsActive).ToListAsync();
+            return await _db.Jobs.Include(j => j.RequiredSkills).Where(j => j.IsActive).OrderByDescending(j => j.PostedDate).ToListAsync();
         }
 
         public async Task<Job?> GetByIdWithDetailsAsync(int id)

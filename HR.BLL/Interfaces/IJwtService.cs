@@ -10,7 +10,7 @@ namespace HR.BLL.Interfaces
 {
     public interface IJwtService
     {
-        authenticationResponseDTO CreateJwtToken(ApplicationUser user);
+        authenticationResponseDTO CreateJwtToken(ApplicationUser user, IList<string> roles);
 
     }
 }

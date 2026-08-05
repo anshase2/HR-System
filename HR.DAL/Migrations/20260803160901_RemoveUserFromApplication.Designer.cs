@@ -4,6 +4,7 @@ using HR.DAL.DatabaseContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HR.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260803160901_RemoveUserFromApplication")]
+    partial class RemoveUserFromApplication
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,11 +97,7 @@ namespace HR.DAL.Migrations
                     b.Property<decimal>("MatchPercentage")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("MatchedSkills")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Recommendation")
+                    b.Property<string>("ResumeText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -446,13 +445,11 @@ namespace HR.DAL.Migrations
 
             modelBuilder.Entity("HR.DAL.Entities.CVAnalysis", b =>
                 {
-                    b.HasOne("HR.DAL.Entities.Application", "Application")
+                    b.HasOne("HR.DAL.Entities.Application", null)
                         .WithOne("CVAnalysis")
                         .HasForeignKey("HR.DAL.Entities.CVAnalysis", "ApplicationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("HR.DAL.Entities.Job", b =>

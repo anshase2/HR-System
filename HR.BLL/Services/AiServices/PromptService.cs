@@ -42,15 +42,15 @@ Candidate CV:
 Return ONLY JSON:
 
 {{
-  ""score"": 0,
-  ""summary"": """",
-  ""skills"": [],
-  ""recommendation"": """"
+  ""MatchPercentage"": 0,
+  ""AiEvaluationSummary"": """",
+  ""MatchedSkills"": [],
+  ""Recommendation"": """"
 }}
 
 
 Rules:
-- Score must be between 0 and 100.
+- MatchPercentage must be between 0 and 100.
 - Identify matching skills.
 - Recommendation should be Interview or Reject.
 

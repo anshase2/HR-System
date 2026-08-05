@@ -13,7 +13,7 @@ namespace HR.BLL.Interfaces
     {
         Task<ApplicationResponseForApplicantDTO> ApplyAsync(CreateApplicationDTO dto,Guid userId);
 
-        Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync();
+        Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync(int? jobId, int? applicantId, ApplicationStatus? status);
 
         Task<ApplicationResponseDTO?> GetByApplicationIdAsync(int id);
 

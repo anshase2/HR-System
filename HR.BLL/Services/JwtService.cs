@@ -29,19 +29,24 @@ namespace HR.BLL.Services
         /// </summary>
         /// <param name="user">ApplicationUser object</param>
         /// <returns>AuthenticationResponse that includes token</returns>
-        public authenticationResponseDTO CreateJwtToken(ApplicationUser user)
+        public authenticationResponseDTO CreateJwtToken(ApplicationUser user, IList<string> roles)
         {
             // Create a DateTime object representing the token expiration time by adding the number of minutes specified in the configuration to the current UTC time.
             DateTime expiration = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:EXPIRATION_MINUTES"]));
 
             // Create an array of Claim objects representing the user's claims, such as their ID, name, email, etc.
-            Claim[] claims = new Claim[] {
+            List<Claim> claims = new List<Claim> {
      new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), //Subject (user id)
      new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), //JWT unique ID
      new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()), //Issued at (date and time of token generation)
      new Claim(ClaimTypes.NameIdentifier, user.Email), //Unique name identifier of the user (Email)
      new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}") //Name of the user
-     };
+      // Add user's roles to JWT
+          };
+             foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             // Create a SymmetricSecurityKey object using the key specified in the configuration.
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

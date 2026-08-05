@@ -26,6 +26,8 @@ namespace HR.DAL.Repositories
         public async Task<IEnumerable<Application>> GetByJobIdAsync(int jobId)
         {
             return await _db.Applications.Include(a => a.Job)
+                 .Include(a => a.CVAnalysis)
+
                 .Include(a => a.JobId)
                 .Include(a => a.Applicant)
                 .ThenInclude(a => a.User)
@@ -34,18 +36,38 @@ namespace HR.DAL.Repositories
         public async Task<Application?> GetApplicationByIdAsync(int id)
         {
             return await _db.Applications
+                .Include(a => a.CVAnalysis)
                 .Include(a => a.Applicant)
                 .ThenInclude(a => a.User)
                 .Include(a => a.Job)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
-        public async Task<IEnumerable<Application>> GetAllApplicationsAsync()
+        public async Task<IEnumerable<Application>> GetAllApplicationsAsync(int? jobId, int? applicantId, ApplicationStatus? status)
         {
-            return await _db.Applications
+            var query = _db.Applications
+                   .Include(a => a.CVAnalysis)
+
                 .Include(a => a.Applicant)
                 .ThenInclude(a => a.User)
                 .Include(a => a.Job)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (jobId.HasValue)
+            {
+                query = query.Where(a => a.JobId == jobId.Value);
+            }
+
+            if (applicantId.HasValue)
+            {
+                query = query.Where(a => a.ApplicantId == applicantId.Value);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(a => a.Status == status.Value);
+            }
+
+            return await query.ToListAsync();
         }
         public async Task<IEnumerable<Application>> GetApplicationsByStatusAsync(ApplicationStatus status)
         {

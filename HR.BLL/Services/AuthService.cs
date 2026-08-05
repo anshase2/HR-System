@@ -83,7 +83,8 @@ namespace HR.BLL.Services
             await _userManager.AddToRoleAsync(user, UserRoles.Applicant);
             await _signInManager.SignInAsync(user, false);
 
-            var authResponse = _jwtService.CreateJwtToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var authResponse = _jwtService.CreateJwtToken(user, roles);
       
 
             return new RegisterApplicantResponseDTO
@@ -101,7 +102,7 @@ namespace HR.BLL.Services
        
         public async Task<CreateEmplyeeResponseDTO> CreateEmployeeAsync(CreateEmplyeeRequestDTO registerDto)
         {
-            if(registerDto.Role!!= UserRoles.Admin && registerDto.Role != UserRoles.Employee)
+            if(registerDto.Role!= UserRoles.Admin && registerDto.Role != UserRoles.Employee)
             {
                 return new CreateEmplyeeResponseDTO
                 {
@@ -133,7 +134,7 @@ namespace HR.BLL.Services
                 };
             }
 
-            await _userManager.AddToRoleAsync(user, registerDto.Role.ToString());
+            await _userManager.AddToRoleAsync(user, registerDto.Role);
 
             return new CreateEmplyeeResponseDTO
             {
@@ -159,8 +160,8 @@ namespace HR.BLL.Services
 
             if (!result.Succeeded)
                 return null;
-
-            var authResponse = _jwtService.CreateJwtToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var authResponse = _jwtService.CreateJwtToken(user, roles);
 
             return new LoginResponseDTO
             {

@@ -13,12 +13,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.Json.Serialization;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IJobService, JobService>();
+builder.Services.AddTransient<IApplicationService, ApplicationService>();
+
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
@@ -40,13 +43,23 @@ builder.Services.AddScoped<HR.DAL.IRepositories.ISkillRepository, HR.DAL.Reposit
 
 // Add services to the container.
 
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add(new ProducesAttribute("application/json"));
-    options.Filters.Add(new ConsumesAttribute("application/json"));
-   /* var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-    options.Filters.Add(new AuthorizeFilter(policy));*/
-});
+builder.Services
+    .AddControllers(options =>
+    {
+        options.Filters.Add(new ProducesAttribute("application/json"));
+        options.Filters.Add(new ConsumesAttribute("application/json"));
+
+        // var policy = new AuthorizationPolicyBuilder()
+        //     .RequireAuthenticatedUser()
+        //     .Build();
+        // options.Filters.Add(new AuthorizeFilter(policy));
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+    });
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(

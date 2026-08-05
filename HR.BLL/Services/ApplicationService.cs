@@ -1,5 +1,7 @@
+using HR.BLL.DTOs.Ai;
 using HR.BLL.DTOs.Application;
 using HR.BLL.Interfaces;
+using HR.BLL.Interfaces.AiContracts;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
@@ -19,16 +21,22 @@ namespace HR.BLL.Services
         private readonly HR.DAL.IRepositories.IApplicantRepository _applicantRepository;
         private readonly HR.DAL.IRepositories.IJobRepository _jobRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFileService _fileService;
+        private readonly ICVAnalysisService _cvAnalysisService;
 
         public ApplicationService(HR.DAL.IRepositories.IApplicationRepository applicationRepository,
             HR.DAL.IRepositories.IApplicantRepository applicantRepository,
             HR.DAL.IRepositories.IJobRepository jobRepository,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IFileService fileService,
+            ICVAnalysisService cvAnalysisService)
         {
             _applicationRepository = applicationRepository;
             _applicantRepository = applicantRepository;
             _jobRepository = jobRepository;
             _userManager = userManager;
+            _cvAnalysisService = cvAnalysisService;
+            _fileService = fileService;
         }
 
         public async Task<ApplicationResponseForApplicantDTO> ApplyAsync(CreateApplicationDTO dto, Guid userID)
@@ -44,17 +52,19 @@ namespace HR.BLL.Services
             var existing = await _applicationRepository.GetByApplicantIdAsync(applicant.Id);
             if (existing.Any(a => a.JobId == dto.JobId))
                 throw new InvalidOperationException("You already applied for this job.");
-
+            var cvUrl = await _fileService.SaveFileAsync(dto.CvUrl, "cvs");
             var application = new HR.DAL.Entities.Application
             {
                 JobId = dto.JobId,
                 ApplicantId = applicant.Id,
                 CoverLetter = dto.CoverLetter,
-                CvUrl = dto.CvUrl.ToString(),
+                CvUrl = cvUrl,
                 SubmittedAt = DateTime.UtcNow,
                 Status = ApplicationStatus.Pending,
 
-            };
+            };           
+          var AIanalysis=await _cvAnalysisService.AnalyzeApplicationAsync(application);
+            application.CVAnalysis = AIanalysis;
 
             await _applicationRepository.AddAsync(application);
             await _applicationRepository.SaveChangesAsync();
@@ -62,9 +72,9 @@ namespace HR.BLL.Services
             return await MapToDtoForApplicantAsync(application);
         }
 
-        public async Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync()
+        public async Task<IEnumerable<ApplicationResponseDTO>> GetAllAsync(int? jobId, int? applicantId, ApplicationStatus? status)
         {
-            var apps = await _applicationRepository.GetAllApplicationsAsync();
+            var apps = await _applicationRepository.GetAllApplicationsAsync(jobId, applicantId, status);
             var list = new List<ApplicationResponseDTO>();
             foreach (var app in apps)
             {
@@ -178,7 +188,19 @@ namespace HR.BLL.Services
                 CoverLetter = app.CoverLetter,
                 CvUrl = app.CvUrl,
                 Status = app.Status.ToString(),
-                SubmittedAt = app.SubmittedAt
+                SubmittedAt = app.SubmittedAt,
+                CVAnalysis =  new CVAnalysisDTO
+                {
+                    Id = app.CVAnalysis.Id,
+
+                    MatchedSkills = app.CVAnalysis.MatchedSkills
+    .Split(',', StringSplitOptions.RemoveEmptyEntries) 
+    .Select(x => x.Trim())
+    .ToList(),
+                    MatchPercentage = app.CVAnalysis.MatchPercentage,
+                    Recommendation = app.CVAnalysis.Recommendation,
+                    AiEvaluationSummary = app.CVAnalysis.AiEvaluationSummary,
+                }
             };
         }
         private async Task<ApplicationResponseForApplicantDTO> MapToDtoForApplicantAsync(HR.DAL.Entities.Application app)

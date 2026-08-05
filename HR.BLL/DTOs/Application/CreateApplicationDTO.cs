@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace HR.BLL.DTOs.Application
 {
@@ -15,11 +15,12 @@ namespace HR.BLL.DTOs.Application
         public int JobId { get; set; }
 
         // Applicant email is used to identify the applicant user
-        [Required]
-        public int ApplicantId { get; set; }
+        //[Required]
+       // public int ApplicantId { get; set; }
 
         public string? CoverLetter { get; set; }
         [Required(ErrorMessage = "CV can't be blank")]
+        [FromForm]
         public IFormFile? CvUrl { get; set; }
     }
 }

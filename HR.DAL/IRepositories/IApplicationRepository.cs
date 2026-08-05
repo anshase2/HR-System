@@ -9,7 +9,7 @@ namespace HR.DAL.IRepositories
     {
         Task<IEnumerable<Application>> GetByApplicantIdAsync(int applicantId);
         Task<IEnumerable<Application>> GetByJobIdAsync(int jobId);
-         Task<IEnumerable<Application>> GetAllApplicationsAsync();
+         Task<IEnumerable<Application>> GetAllApplicationsAsync(int? jobId, int? applicantId, ApplicationStatus? status);
         Task<Application> GetApplicationByIdAsync(int id);//with all attributes
         Task<IEnumerable<Application>> GetApplicationsByStatusAsync(ApplicationStatus Status);
 

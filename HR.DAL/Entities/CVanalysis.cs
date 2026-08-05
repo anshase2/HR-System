@@ -12,7 +12,9 @@ namespace HR.DAL.Entities
         public int Id { get; set; }
         public int ApplicationId { get; set; }
         public decimal MatchPercentage { get; set; }
-        public string ResumeText { get; set; } = string.Empty;
         public string AiEvaluationSummary { get; set; } = string.Empty;
+        public string MatchedSkills { get; set; } = string.Empty;
+        public string Recommendation { get; set; } = string.Empty;
+        public Application Application { get; set; } = null!;
     }
 }

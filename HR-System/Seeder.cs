@@ -62,7 +62,7 @@ namespace HR.API
                 {
                     await userManager.AddToRoleAsync(
                         adminUser,
-                        "Admin"
+                        UserRoles.Admin
                     );
                 }
             }

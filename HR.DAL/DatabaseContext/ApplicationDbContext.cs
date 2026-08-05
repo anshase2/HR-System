@@ -33,7 +33,29 @@ namespace HR.DAL.DatabaseContext
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+            modelBuilder.Entity<Application>()
+    .HasOne(a => a.Job)
+    .WithMany(j => j.Applications)
+    .HasForeignKey(a => a.JobId)
+    .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<Application>()
+                .HasOne(a => a.Applicant)
+                .WithMany(ap => ap.Applications)
+                .HasForeignKey(a => a.ApplicantId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Job>()
+                .HasOne(j => j.CreatedBy)
+                .WithMany()
+                .HasForeignKey(j => j.CreatedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Applicant>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
 
         }
