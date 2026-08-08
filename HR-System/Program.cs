@@ -23,6 +23,8 @@ builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IApplicationService, ApplicationService>();
 
 builder.Services.AddTransient<IJwtService, JwtService>();
+builder.Services.AddTransient<HR.BLL.Interfaces.IOtpService, HR.BLL.Services.OtpService>();
+builder.Services.AddTransient<HR.BLL.Interfaces.IEmailService, HR.BLL.Services.EmailService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddHttpClient();
@@ -39,6 +41,7 @@ builder.Services.AddScoped<HR.DAL.IRepositories.IJobRepository, HR.DAL.Repositor
 builder.Services.AddScoped<HR.DAL.IRepositories.IApplicationRepository, HR.DAL.Repositories.ApplicationRepository>();
 builder.Services.AddScoped<HR.DAL.IRepositories.IApplicantRepository, HR.DAL.Repositories.ApplicantRepository>();
 builder.Services.AddScoped<HR.DAL.IRepositories.ISkillRepository, HR.DAL.Repositories.SkillRepository>();
+builder.Services.AddScoped<HR.DAL.IRepositories.IEmailOtpRepository, HR.DAL.Repositories.EmailOtpRepository>();
 // Job repository
 
 // Add services to the container.

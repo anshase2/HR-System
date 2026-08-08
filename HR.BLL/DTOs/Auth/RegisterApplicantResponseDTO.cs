@@ -15,6 +15,8 @@ namespace HR.BLL.DTOs.Auth
         public DateTime Expiration { get; set; }
         public string Role { get; set; } = UserRoles.Applicant;
         public List<string>? Errors { get; set; }=null;
+        public bool? RequiresEmailVerification { get; set; } = false;
+        public string? Message { get; set; }
 
     }
 }

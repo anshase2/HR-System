@@ -30,19 +30,28 @@ namespace HR.BLL.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IJwtService _jwtService;
         private readonly ApplicationDbContext _context;
+        private readonly HR.BLL.Interfaces.IOtpService _otpService;
+        private readonly HR.BLL.Interfaces.IEmailService _emailService;
+        private readonly HR.DAL.IRepositories.IEmailOtpRepository _emailOtpRepository;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IHttpContextAccessor httpContextAccessor,
             IJwtService jwtService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            HR.BLL.Interfaces.IOtpService otpService,
+            HR.BLL.Interfaces.IEmailService emailService,
+            HR.DAL.IRepositories.IEmailOtpRepository emailOtpRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _httpContextAccessor = httpContextAccessor;
             _jwtService = jwtService;
             _context = context;
+            _otpService = otpService;
+            _emailService = emailService;
+            _emailOtpRepository = emailOtpRepository;
         }
 
         public async Task<RegisterApplicantResponseDTO> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
@@ -54,7 +63,8 @@ namespace HR.BLL.Services
                 UserName = registerDto.Email,
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,
-                CreatedAt = DateOnly.FromDateTime(DateTime.Now)
+                CreatedAt = DateOnly.FromDateTime(DateTime.Now),
+                IsEmailVerified = false
             };
 
             IdentityResult result = await _userManager.CreateAsync(user, registerDto.Password);
@@ -196,6 +206,16 @@ namespace HR.BLL.Services
             }
 
             return null;
+        }
+
+        public Task<authenticationResponseDTO?> VerifyEmailAsync(VerifyEmailOtpDTO dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ResendVerificationAsync(string email)
+        {
+            throw new NotImplementedException();
         }
     }
 }

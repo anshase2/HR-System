@@ -93,6 +93,36 @@ namespace HR_System.Controllers
             return Ok(response);
         }
 
+        [AllowAnonymous]
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> PostVerifyEmail(VerifyEmailOtpDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var auth = await _authService.VerifyEmailAsync(dto);
+            if (auth == null)
+                return Problem("Invalid or expired verification code.");
+
+            return Ok(auth);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> PostResendVerification(ResendVerificationDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var ok = await _authService.ResendVerificationAsync(dto.Email);
+            if (!ok)
+                return Problem("Unable to resend verification. Check email or try later.");
+
+            return Ok(new { Message = "Verification code sent if the email exists and is not verified." });
+        }
+
 
         /// <summary>
         /// 

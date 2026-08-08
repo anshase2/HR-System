@@ -13,6 +13,8 @@ namespace HR.DAL.Entities.Identity
 
         public DateOnly CreatedAt { get; set; }
 
+        public bool? IsEmailVerified { get; set; } = false;
+
 
     }
 }

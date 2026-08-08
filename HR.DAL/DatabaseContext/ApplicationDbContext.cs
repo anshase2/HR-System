@@ -23,6 +23,7 @@ namespace HR.DAL.DatabaseContext
         public DbSet<CVAnalysis> CVAnalysis { get; set; }
         public DbSet<Application> Applications { get; set; }
         public DbSet<Applicant> Applicants { get; set; }
+        public DbSet<HR.DAL.Entities.EmailOtp> EmailOtps { get; set; }
 
 
 
