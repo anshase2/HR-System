@@ -97,9 +97,12 @@ export default function LoginForm() {
 
         </label>
 
-        <button className="text-blue-600 text-sm hover:underline">
-          Forgot Password?
-        </button>
+       <Link
+  to="/forgot-password"
+  className="text-blue-600 text-sm hover:underline"
+>
+  Forgot Password?
+</Link>
 
       </div>
 

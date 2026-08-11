@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 export default function JobCard({
   id,
   title,
-  company,
+  department,
   location,
-  type,
+  employmentType,
+  description,
 }) {
   const navigate = useNavigate();
 
@@ -17,7 +18,7 @@ export default function JobCard({
       </h2>
 
       <p className="text-gray-600 mt-3">
-        🏢 {company}
+        🏢 {department}
       </p>
 
       <p className="text-gray-600 mt-2">
@@ -25,14 +26,12 @@ export default function JobCard({
       </p>
 
       <p className="text-gray-500 mt-5 leading-7">
-        Join the ITG team and work on innovative technology solutions.
-        We're looking for motivated professionals who are passionate
-        about software development and continuous learning.
+        {description}
       </p>
 
       <div className="flex gap-3 mt-6">
         <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-          {type}
+          {employmentType}
         </span>
       </div>
 

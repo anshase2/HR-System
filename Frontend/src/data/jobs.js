@@ -2,119 +2,79 @@ const jobs = [
   {
     id: 1,
     title: "Software Engineer",
-    company: "Integrated Technology Group (ITG)",
-    location: "Amman, Jordan",
-    type: "Full Time",
-
     department: "Software Engineering",
-    experience: "2-4 Years",
-    salary: "1200 - 1600 JOD",
-
+    employmentType: "Full-Time",
+    location: "Amman",
     description:
       "We are looking for a passionate Software Engineer to join the ITG development team and build scalable software solutions.",
-
-    requirements: [
-      "Bachelor's degree in Software Engineering.",
+    requiredSkills: [
       "React.js",
       "JavaScript",
       "REST APIs",
       "Git",
       "Problem Solving",
     ],
-
-    benefits: [
-      "Medical Insurance",
-      "Annual Bonus",
-      "Training Programs",
-      "Career Growth",
-      "Hybrid Work",
-    ],
+    salary: "1200 - 1600 JOD",
+    deadline: "2026-09-30",
+    status: "Active",
   },
 
   {
     id: 2,
     title: "Frontend Developer",
-    company: "Integrated Technology Group (ITG)",
-    location: "Amman, Jordan",
-    type: "Full Time",
-
     department: "Frontend Development",
-    experience: "1-3 Years",
-    salary: "1000 - 1400 JOD",
-
+    employmentType: "Full-Time",
+    location: "Amman",
     description:
       "Build modern responsive web applications using React and Tailwind CSS.",
-
-    requirements: [
+    requiredSkills: [
       "React",
       "JavaScript",
       "HTML",
       "CSS",
       "Git",
     ],
-
-    benefits: [
-      "Medical Insurance",
-      "Flexible Hours",
-      "Training Programs",
-    ],
+    salary: "1000 - 1400 JOD",
+    deadline: "2026-09-25",
+    status: "Active",
   },
 
   {
     id: 3,
     title: "AI Engineer",
-    company: "Integrated Technology Group (ITG)",
-    location: "Amman, Jordan",
-    type: "Hybrid",
-
     department: "Artificial Intelligence",
-    experience: "3+ Years",
-    salary: "1800 - 2500 JOD",
-
+    employmentType: "Full-Time",
+    location: "Amman",
     description:
       "Develop AI solutions and integrate machine learning models into business systems.",
-
-    requirements: [
+    requiredSkills: [
       "Python",
       "Machine Learning",
       "TensorFlow",
       "Data Analysis",
     ],
-
-    benefits: [
-      "Medical Insurance",
-      "Hybrid Work",
-      "AI Certifications",
-    ],
+    salary: "1800 - 2500 JOD",
+    deadline: "2026-10-01",
+    status: "Draft",
   },
 
   {
     id: 4,
     title: "Quality Assurance Engineer",
-    company: "Integrated Technology Group (ITG)",
-    location: "Amman, Jordan",
-    type: "Full Time",
-
-    department: "Quality Assurance",
-    experience: "2 Years",
-
-    salary: "900 - 1200 JOD",
-
+    department: "QA Engineering",
+    employmentType: "Full-Time",
+    location: "Amman",
     description:
       "Ensure software quality through testing and automation.",
-
-    requirements: [
+    requiredSkills: [
       "Manual Testing",
       "Automation Testing",
       "Selenium",
       "Attention to Detail",
     ],
-
-    benefits: [
-      "Medical Insurance",
-      "Annual Bonus",
-      "Career Growth",
-    ],
+    salary: "900 - 1200 JOD",
+    deadline: "2026-09-20",
+    status: "Active",
   },
 ];
 

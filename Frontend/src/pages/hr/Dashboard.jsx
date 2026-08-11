@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import jobs from "../../data/jobs";
 export default function Dashboard() {
   const [period, setPeriod] = useState("Monthly");
-  const dashboardData = {
+  const [jobSearch, setJobSearch] = useState("");
+ const [selectedDepartment, setSelectedDepartment] = useState("");
+ const [selectedJob, setSelectedJob] = useState(null); 
+ 
+ const dashboardData = {
   Today: {
     jobs: 2,
     applicants: 8,
@@ -39,6 +45,44 @@ export default function Dashboard() {
   },
 };
 const stats = dashboardData[period];
+const [jobPostings, setJobPostings] = useState([
+  {
+    id: 1,
+    position: "Senior Software Engineer",
+    department: "Software Engineering",
+    status: "Active",
+    applications: 24,
+    published: "2 days ago",
+  },
+  {
+    id: 2,
+    position: "Frontend Developer",
+    department: "Frontend Development",
+    status: "Active",
+    applications: 17,
+    published: "Yesterday",
+  },
+  {
+    id: 3,
+    position: "AI Engineer",
+    department: "Artificial Intelligence",
+    status: "Draft",
+    applications: 8,
+    published: "Today",
+  },
+]);
+
+const filteredJobs = jobPostings.filter((job) => {
+  const matchesSearch =
+    job.position.toLowerCase().includes(jobSearch.toLowerCase()) ||
+    job.department.toLowerCase().includes(jobSearch.toLowerCase());
+
+  const matchesDepartment =
+    selectedDepartment === "" ||
+    job.department === selectedDepartment;
+
+  return matchesSearch && matchesDepartment;
+});
 
   const navigate = useNavigate();
   return (
@@ -70,11 +114,13 @@ const stats = dashboardData[period];
   Applicants
 </button>
 
-            <button className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
+            <button  onClick={() => navigate("/candidates")}
+            className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
               Candidates
             </button>
 
-            <button className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
+            <button  onClick={() => navigate("/settings")}
+             className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
               Settings
             </button>
 
@@ -187,24 +233,54 @@ const stats = dashboardData[period];
 
               </div>
 
-              <button className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700">
-                + Create New job
-              </button>
+              <Link
+    to="/create-job"
+    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+>
+    + Create New Job
+</Link>
 
             </div>
 
             <div className="flex justify-between items-center mb-6">
 
-              <input
-                type="text"
-                placeholder="Search ITG jobs..."
-                className="border border-gray-300 rounded-lg px-4 py-3 w-80"
-              />
+             <input
+  type="text"
+  value={jobSearch}
+  onChange={(e) => setJobSearch(e.target.value)}
+  placeholder="Search ITG jobs..."
+  className="border border-gray-300 rounded-lg px-4 py-3 w-80"
+/>
 
-              <button className="border border-gray-300 px-5 py-3 rounded-lg hover:bg-gray-100">
-                Departments
-              </button>
+              <div className="relative">
+  <select
+    value={selectedDepartment}
+    onChange={(e) => setSelectedDepartment(e.target.value)}
+    className="border border-gray-300 px-5 py-3 rounded-lg bg-white hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="">Departments</option>
 
+    <option value="Software Engineering">
+      Software Engineering
+    </option>
+
+    <option value="Frontend Development">
+      Frontend Development
+    </option>
+
+    <option value="Artificial Intelligence">
+      Artificial Intelligence
+    </option>
+
+    <option value="Quality Assurance">
+      Quality Assurance
+    </option>
+
+    <option value="DevOps">
+      DevOps
+    </option>
+  </select>
+</div>
             </div>
 
             <table className="w-full border-collapse">
@@ -225,142 +301,279 @@ const stats = dashboardData[period];
               </thead>
 
               <tbody>
+  {filteredJobs.map((job) => (
+    <tr
+      key={job.id}
+      className="border-b hover:bg-gray-50"
+    >
+      <td className="p-4 font-medium">
+        {job.position}
+      </td>
 
-<tr className="border-b hover:bg-gray-50">
+      <td className="p-4">
+        {job.department}
+      </td>
 
-  <td className="p-4 font-medium">
-    Senior Software Engineer
-  </td>
+      <td className="p-4">
+        <span
+          className={
+            job.status === "Active"
+              ? "bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
+              : "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm"
+          }
+        >
+          {job.status}
+        </span>
+      </td>
 
-  <td className="p-4">
-    Software Engineering
-  </td>
+      <td className="p-4">
+        {job.applications}
+      </td>
 
-  <td className="p-4">
-    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-      Active
-    </span>
-  </td>
+      <td className="p-4">
+        {job.published}
+      </td>
 
-  <td className="p-4">
-    24
-  </td>
+      <td className="p-4">
+        <div className="flex gap-2">
 
-  <td className="p-4">
-    2 days ago
-  </td>
+          <Link
+            to={`/dashboard/edit/${job.id}`}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Edit
+          </Link>
 
-  <td className="p-4">
-    <div className="flex gap-2">
+          <button
+  onClick={() => setSelectedJob(job)}
+  className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
+>
+  View
+</button>
 
-      <button className="bg-blue-100 px-3 py-1 rounded hover:bg-blue-200">
-        Edit
-      </button>
+          <button
+  onClick={() => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${job.position}"?`
+    );
 
-      <button className="bg-green-100 px-3 py-1 rounded hover:bg-green-200">
-        View
-      </button>
+    if (confirmed) {
+      setJobPostings((prevJobs) =>
+        prevJobs.filter((item) => item.id !== job.id)
+      );
+    }
+  }}
+  className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"
+>
+  Delete
+</button>
 
-      <button className="bg-red-100 px-3 py-1 rounded hover:bg-red-200">
-        Delete
-      </button>
-
-    </div>
-  </td>
-
-</tr>
-
-<tr className="border-b hover:bg-gray-50">
-
-  <td className="p-4 font-medium">
-    Frontend Developer
-  </td>
-
-  <td className="p-4">
-    Frontend Development
-  </td>
-
-  <td className="p-4">
-    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-      Active
-    </span>
-  </td>
-
-  <td className="p-4">
-    17
-  </td>
-
-  <td className="p-4">
-    Yesterday
-  </td>
-
-  <td className="p-4">
-    <div className="flex gap-2">
-
-      <button className="bg-blue-100 px-3 py-1 rounded hover:bg-blue-200">
-        Edit
-      </button>
-
-      <button className="bg-green-100 px-3 py-1 rounded hover:bg-green-200">
-        View
-      </button>
-
-      <button className="bg-red-100 px-3 py-1 rounded hover:bg-red-200">
-        Delete
-      </button>
-
-    </div>
-  </td>
-
-</tr>
-
-<tr className="hover:bg-gray-50">
-
-  <td className="p-4 font-medium">
-    AI Engineer
-  </td>
-
-  <td className="p-4">
-    Artificial Intelligence
-  </td>
-
-  <td className="p-4">
-    <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
-      Draft
-    </span>
-  </td>
-
-  <td className="p-4">
-    8
-  </td>
-
-  <td className="p-4">
-    Today
-  </td>
-
-  <td className="p-4">
-    <div className="flex gap-2">
-
-      <button className="bg-blue-100 px-3 py-1 rounded hover:bg-blue-200">
-        Edit
-      </button>
-
-      <button className="bg-green-100 px-3 py-1 rounded hover:bg-green-200">
-        View
-      </button>
-
-      <button className="bg-red-100 px-3 py-1 rounded hover:bg-red-200">
-        Delete
-      </button>
-
-    </div>
-  </td>
-
-</tr>
-
+        </div>
+      </td>
+    </tr>
+  ))}
 </tbody>
 
 </table>
+
+{selectedJob && (() => {
+  const jobDetails = jobs.find(
+    (job) => job.id === selectedJob.id
+  );
+
+  if (!jobDetails) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6">
+
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+
+        {/* Header */}
+        <div className="p-8 border-b">
+
+          <div className="flex justify-between items-start">
+
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {jobDetails.title}
+              </h2>
+
+              <p className="text-gray-500 mt-2">
+                Integrated Technology Group (ITG)
+              </p>
+            </div>
+
+            <button
+              onClick={() => setSelectedJob(null)}
+              className="text-gray-400 hover:text-gray-900 text-3xl"
+            >
+              ×
+            </button>
+
+          </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-3 mt-6">
+
+            <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full">
+              {jobDetails.employmentType}
+            </span>
+
+            <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full">
+              📍 {jobDetails.location}
+            </span>
+
+            <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full">
+              {jobDetails.department}
+            </span>
+
+          </div>
+
+        </div>
+
+        {/* Content */}
+        <div className="p-8">
+
+          {/* Job Information */}
+          <div className="grid grid-cols-2 gap-6">
+
+            <div className="bg-gray-50 rounded-lg p-5">
+              <p className="text-gray-500 text-sm">
+                Department
+              </p>
+
+              <p className="font-semibold mt-2">
+                {jobDetails.department}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-5">
+              <p className="text-gray-500 text-sm">
+                Employment Type
+              </p>
+
+              <p className="font-semibold mt-2">
+                {jobDetails.employmentType}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-5">
+              <p className="text-gray-500 text-sm">
+                Work Location
+              </p>
+
+              <p className="font-semibold mt-2">
+                {jobDetails.location}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-5">
+              <p className="text-gray-500 text-sm">
+                Salary Range
+              </p>
+
+              <p className="font-semibold mt-2">
+                {jobDetails.salary || "Not specified"}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-5">
+              <p className="text-gray-500 text-sm">
+                Application Deadline
+              </p>
+
+              <p className="font-semibold mt-2">
+                {jobDetails.deadline || "Not specified"}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-5">
+              <p className="text-gray-500 text-sm">
+                Status
+              </p>
+
+              <span
+                className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
+                  jobDetails.status === "Active"
+                    ? "bg-green-100 text-green-700"
+                    : jobDetails.status === "Draft"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {jobDetails.status}
+              </span>
+            </div>
+
+          </div>
+
+          {/* Description */}
+          <div className="mt-8">
+
+            <h3 className="text-xl font-bold">
+              Job Description
+            </h3>
+
+            <p className="text-gray-600 mt-4 leading-7">
+              {jobDetails.description}
+            </p>
+
+          </div>
+
+          {/* Required Skills */}
+          <div className="mt-8">
+
+            <h3 className="text-xl font-bold">
+              Required Skills
+            </h3>
+
+            <div className="flex flex-wrap gap-2 mt-4">
+
+              {jobDetails.requiredSkills.map(
+                (skill, index) => (
+                  <span
+                    key={index}
+                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"
+                  >
+                    {skill}
+                  </span>
+                )
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Footer */}
+        <div className="border-t p-6 flex justify-end gap-3">
+
+          <button
+            onClick={() => setSelectedJob(null)}
+            className="px-6 py-3 rounded-lg border hover:bg-gray-100"
+          >
+            Close
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedJob(null);
+              navigate(`/dashboard/edit/${jobDetails.id}`);
+            }}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+          >
+            Edit Job
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+})()}
+
 
 <p className="text-sm text-gray-500 mt-6">
   This dashboard enables the HR team at Integrated Technology Group (ITG) to manage job vacancies, review applications, and streamline the recruitment process through an AI-powered recruitment platform.

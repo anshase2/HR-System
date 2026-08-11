@@ -1,7 +1,13 @@
 import SearchBar from "./SearchBar";
 import heroImage from "../../assets/images/hero.png";
-
-export default function Hero() {
+import { Link } from "react-router-dom";
+export default function Hero({
+  search,
+  setSearch,
+  department,
+  setDepartment,
+  onSearch,
+}) {
   return (
     <section className="bg-gray-50">
 
@@ -33,18 +39,24 @@ export default function Hero() {
             </p>
             <div className="mt-10 flex gap-6">
 
-  <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
-   View Open Positions
-  </button>
+ 
 
-  <button className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition">
-    About ITG
-  </button>
-
+  <Link
+  to="/about"
+  className="bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition duration-300"
+>
+  About ITG
+</Link>
 </div>
 
 <div className="mt-10">
-  <SearchBar />
+  <SearchBar
+    search={search}
+    setSearch={setSearch}
+    department={department}
+    setDepartment={setDepartment}
+    onSearch={onSearch}
+  />
 </div>
           </div>
 

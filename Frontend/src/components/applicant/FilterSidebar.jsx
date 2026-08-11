@@ -1,4 +1,35 @@
-export default function FilterSidebar() {
+export default function FilterSidebar({
+  selectedDepartments = [],
+  setSelectedDepartments = () => {},
+  selectedTypes = [],
+  setSelectedTypes = () => {},
+  selectedLocations = [],
+  setSelectedLocations = () => {},
+}) {
+  const handleDepartmentChange = (department) => {
+    setSelectedDepartments((prev) =>
+      prev.includes(department)
+        ? prev.filter((item) => item !== department)
+        : [...prev, department]
+    );
+  };
+
+  const handleTypeChange = (type) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type)
+        ? prev.filter((item) => item !== type)
+        : [...prev, type]
+    );
+  };
+
+  const handleLocationChange = (location) => {
+    setSelectedLocations((prev) =>
+      prev.includes(location)
+        ? prev.filter((item) => item !== location)
+        : [...prev, location]
+    );
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
 
@@ -7,7 +38,6 @@ export default function FilterSidebar() {
       </h2>
 
       {/* Department */}
-
       <div className="mb-8">
 
         <h3 className="font-semibold mb-3">
@@ -16,37 +46,33 @@ export default function FilterSidebar() {
 
         <div className="space-y-3">
 
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Software Engineering
-          </label>
+          {[
+            "Software Engineering",
+            "Frontend Development",
+            "Artificial Intelligence",
+            "QA Engineering",
+            "DevOps",
+          ].map((department) => (
+            <label
+              key={department}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedDepartments.includes(department)}
+                onChange={() =>
+                  handleDepartmentChange(department)
+                }
+              />
 
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Frontend Development
-          </label>
-
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Artificial Intelligence
-          </label>
-
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Quality Assurance
-          </label>
-
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            DevOps
-          </label>
+              {department}
+            </label>
+          ))}
 
         </div>
-
       </div>
 
       {/* Employment Type */}
-
       <div className="mb-8">
 
         <h3 className="font-semibold mb-3">
@@ -55,27 +81,30 @@ export default function FilterSidebar() {
 
         <div className="space-y-3">
 
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Full Time
-          </label>
+          {[
+            "Full-Time",
+            "Part-Time",
+            "Internship",
+            "Contract",
+          ].map((type) => (
+            <label
+              key={type}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedTypes.includes(type)}
+                onChange={() => handleTypeChange(type)}
+              />
 
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Hybrid
-          </label>
-
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
-            Internship
-          </label>
+              {type}
+            </label>
+          ))}
 
         </div>
-
       </div>
 
       {/* Location */}
-
       <div>
 
         <h3 className="font-semibold mb-3">
@@ -84,13 +113,21 @@ export default function FilterSidebar() {
 
         <div className="space-y-3">
 
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
+          <label className="flex items-center gap-2 cursor-pointer">
+
+            <input
+              type="checkbox"
+              checked={selectedLocations.includes("Amman")}
+              onChange={() =>
+                handleLocationChange("Amman")
+              }
+            />
+
             Amman Headquarters
+
           </label>
 
         </div>
-
       </div>
 
     </div>
