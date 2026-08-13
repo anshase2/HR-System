@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HR.API</name>
+    </assembly>
+    <members>
+        <member name="M:HR_System.Controllers.AccountController.#ctor(HR.BLL.Interfaces.IAuthService)">
+            <summary>
+            
+            </summary>
+            <param name="userManager"></param>
+            <param name="signInManager"></param>
+            <param name="roleManager"></param>
+            <param name="authService"></param>
+        </member>
+        <member name="M:HR_System.Controllers.AccountController.PostCreateEmployee(HR.BLL.DTOs.Auth.CreateEmplyeeRequestDTO)">
+             <summary>
+             create new hr employee
+             </summary>
+             <param name="registerDTO"></param>
+             <returns></returns>
+            
+        </member>
+        <member name="M:HR_System.Controllers.AccountController.PostRegisterApplicant(HR.BLL.DTOs.Auth.RegisterApplicantDTO)">
+            <summary>
+             Register new applicant       
+            </summary>
+            <param name="registerDTO"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HR_System.Controllers.AccountController.PostLogin(HR.BLL.DTOs.Auth.LoginDTO)">
+            <summary>
+            Login
+            </summary>
+            <param name="loginDTO"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HR_System.Controllers.AccountController.GetLogout">
+            <summary>
+            Logout
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

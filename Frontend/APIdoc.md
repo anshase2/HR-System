@@ -1,0 +1,1864 @@
+# HR System API Documentation
+
+## 1. Overview
+
+This document describes the **HR System ASP.NET Core Web API**. The API supports hiring workflows: user authentication, job posting management, job applications (including CV upload and AI CV analysis), and related utilities.
+
+**Who should use this documentation:** Frontend developers integrating a client application with this API, without needing to read the backend source code.
+
+**Main functional areas:**
+
+| Area | Description |
+|---|---|
+| Authentication & Accounts | Login, applicant registration, employee/admin creation, logout, email verification endpoints |
+| Jobs | List, filter, create, update, and delete job postings |
+| Applications | Apply to jobs (with CV), list/filter applications, update status, delete |
+| Documents | Extract text from uploaded CV files (PDF / DOCX) |
+| Gemini Test | Simple test endpoint that calls the configured Gemini model |
+
+---
+
+# 2. Base URL
+
+From `Properties/launchSettings.json`, the local development URLs are:
+
+| Profile | Base URL |
+|---|---|
+| https (recommended) | `https://localhost:7256` |
+| http | `http://localhost:5004` |
+| IIS Express | `https://localhost:44357` / `http://localhost:51548` |
+
+API routes are under `/api/...`. Examples:
+
+- `https://localhost:7256/api/Account/login`
+- `https://localhost:7256/api/Jobs`
+- `https://localhost:7256/api/Application/apply`
+
+Swagger UI (Development only): `https://localhost:7256/swagger`
+
+**Production / deployed base URL:** Not specified in the current implementation. Ask your backend team or check the deployment environment configuration.
+
+JSON property names use **camelCase** (ASP.NET Core default). Enum values in JSON are sent/received as **strings** (`JsonStringEnumConverter` is enabled).
+
+---
+
+# 3. Authentication
+
+## 3.1 How authentication works
+
+1. The user logs in (or registers as an applicant) and receives a **JWT token**.
+2. For protected endpoints, the frontend sends that token in the `Authorization` header.
+3. The API validates the JWT (issuer, audience, lifetime, signing key) and checks role claims when `[Authorize(Roles = ...)]` is applied.
+4. There is **no global “require authentication” filter**. Endpoints without `[Authorize]` (or marked `[AllowAnonymous]`) can be called without a token.
+
+## 3.2 Login
+
+- **Endpoint:** `POST /api/Account/login`
+- **Credentials required:** `email`, `password`
+- **Returns:** `LoginResponseDTO` including `token`, `expiration`, `userId`, `email`, `firstName`, `lastName`, `role`
+
+## 3.3 How to get the JWT token
+
+Read the `token` field from:
+
+- Login response (`POST /api/Account/login`)
+- Applicant registration response (`POST /api/Account/register-applicant`) — also returns `token` / `expiration`
+
+## 3.4 How to send the JWT token
+
+```http
+Authorization: Bearer {JWT_TOKEN}
+```
+
+Example:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## 3.5 Token lifetime
+
+Configured via `Jwt:EXPIRATION_MINUTES` in `appsettings.json` (currently **480 minutes**). The response also includes an `expiration` timestamp (UTC).
+
+## 3.6 Roles
+
+Roles used by authorization attributes and seeding:
+
+| Role | Constant value | Typical use |
+|---|---|---|
+| Admin | `"Admin"` | Create employees/admins, manage jobs and applications |
+| Employee | `"Employee"` | Manage jobs and applications (HR staff) |
+| Applicant | `"Applicant"` | Register, apply to jobs, view own applications |
+
+A default **Admin** user is seeded on application startup (see `Seeder.cs` in the API project). Do not hard-code production credentials from seed data.
+
+## 3.7 Which endpoints require authentication
+
+| Requirement | Endpoints |
+|---|---|
+| Not required (`[AllowAnonymous]` or no `[Authorize]`) | Login, register applicant, verify email, resend verification, list jobs, active jobs, get job by id, document extract, Gemini test |
+| Any authenticated user (`[Authorize]`) | Logout, get application by id |
+| Admin only | Create employee |
+| Admin or Employee | Create/update/delete jobs; list applications; applications by job; update application status; delete application |
+| Applicant only | Apply to job; get my applications |
+
+---
+
+# 4. Common HTTP Status Codes
+
+| Status Code | Meaning | When it occurs |
+|---|---|---|
+| 200 | OK | Successful GET/POST that returns a body (e.g. login, list jobs) |
+| 201 | Created | Job created; application submitted (`CreatedAtAction`) |
+| 204 | No Content | Logout; job update/delete; application status update/delete |
+| 400 | Bad Request | Model validation failed on verify-email / resend-verification; empty or invalid application status string |
+| 401 | Unauthorized | Missing/invalid JWT when `[Authorize]` is required; missing user id claim on apply / create job / my applications |
+| 403 | Forbidden | Valid JWT but role is not allowed for the endpoint |
+| 404 | Not Found | Job/application not found for get/update/delete (where controller returns `NotFound()`) |
+| 500 | Internal Server Error | `Problem(...)` responses (e.g. invalid login credentials, registration errors); unhandled exceptions (e.g. apply failures, unimplemented email verification) |
+
+**Note:** Invalid login credentials currently return `Problem("Invalid email or password")`, which is a **500** ProblemDetails response, not 401.
+
+---
+
+# 5. Enums
+
+The API enables `JsonStringEnumConverter`. For request/response JSON, send and expect **string enum names** (e.g. `"FullTime"`), not numeric values. Query parameters for enums should also use the enum name (e.g. `employmentType=FullTime`).
+
+Numeric values below are the underlying C# values for reference only.
+
+### EmploymentType
+
+Used in job create/update requests and job list filters.
+
+| Value | Name | Meaning |
+|---|---|---|
+| 1 | FullTime | Full-time employment |
+| 2 | PartTime | Part-time employment |
+| 3 | Contract | Contract employment |
+| 4 | Freelance | Freelance |
+| 5 | Internship | Internship |
+
+### WorkplaceType
+
+| Value | Name | Meaning |
+|---|---|---|
+| 1 | OnSite | On-site work |
+| 2 | Remote | Remote work |
+| 3 | Hybrid | Hybrid work |
+
+### ExperienceLevel
+
+| Value | Name | Meaning |
+|---|---|---|
+| 1 | EntryLevel | Entry level |
+| 2 | Junior | Junior |
+| 3 | MidLevel | Mid level |
+| 4 | Senior | Senior |
+| 5 | Lead | Lead |
+| 6 | Executive | Executive |
+
+### ApplicationStatus
+
+Used when filtering applications and when updating status. Default C# numbering (starts at 0).
+
+| Value | Name | Meaning |
+|---|---|---|
+| 0 | Pending | Newly submitted (default when applying) |
+| 1 | Reviewing | Under review |
+| 2 | Accepted | Accepted |
+| 3 | Rejected | Rejected |
+
+**Updating status:** `PUT /api/Application/{id}/status` expects a **raw JSON string body** (not an object), parsed with `Enum.TryParse` (case-insensitive). Example body: `"Reviewing"`.
+
+### Role (DAL enum)
+
+There is a DAL enum `Role` (`Applicant = 1`, `Admin = 2`, `HR_Employee = 3`). API authorization and Identity roles use the string constants **`Admin`**, **`Employee`**, **`Applicant`** (`UserRoles`), not this DAL enum. When creating an employee, send `"Admin"` or `"Employee"` in the `role` field.
+
+---
+
+# 6. Conventions for Frontend Developers
+
+## Dates
+
+`DateTime` values are serialized as **ISO 8601** strings (System.Text.Json default), for example:
+
+```json
+"2026-08-11T10:30:00Z"
+```
+
+Nullable dates may be `null` (e.g. `closingDate`).
+
+## Enums
+
+Send **string names** in JSON bodies and query strings (see section 5).
+
+Job **responses** return employment/workplace/experience as strings via `.ToString()` (e.g. `"FullTime"`).
+
+## File uploads
+
+- Apply to a job: `multipart/form-data` with fields `jobId`, `coverLetter` (optional), `cvUrl` (file, required).
+- Document extract: upload an `IFormFile` parameter named `file`. Supported extensions in extraction logic: `.pdf`, `.docx`.
+
+Files are saved under `wwwroot/uploads/{folder}/` with a generated GUID filename. The stored path may be a **physical path** on the server (as returned/saved by `FileService`).
+
+## Password rules (Identity)
+
+Configured in `Program.cs`:
+
+| Rule | Value |
+|---|---|
+| Minimum length | 5 |
+| Require digit | Yes |
+| Require lowercase | Yes |
+| Require uppercase | No |
+| Require non-alphanumeric | No |
+
+## Error response shapes
+
+- **`Problem(string)` / `Problem(...)`:** ASP.NET Core ProblemDetails (typically status 500), with a `detail` (or related) message.
+- **`BadRequest(ModelState)`:** Standard validation problem payload with field errors.
+- **`BadRequest("...")`:** Plain text/string body for some application status errors.
+- Unhandled exceptions (no custom exception middleware): typically **500**.
+
+## Common frontend error handling tips
+
+| Situation | Suggested handling |
+|---|---|
+| 401 | Redirect to login; refresh token is not implemented — user must log in again |
+| 403 | Show “you don’t have permission” |
+| 404 | Resource missing; refresh lists |
+| 400 | Show validation messages |
+| 500 with “Invalid email or password” | Treat as failed login (despite 500) |
+| 500 on apply | May mean job not found, already applied, empty CV, or AI/file errors — read ProblemDetails / exception message if exposed |
+
+---
+
+# 7. API Endpoints
+
+Endpoints are grouped by feature below.
+
+---
+
+# Authentication & Accounts
+
+## Login
+
+### Purpose
+
+Authenticate a user with email and password and receive a JWT for subsequent requests.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Account/login`
+
+### Authentication
+
+Not Required (`[AllowAnonymous]`)
+
+### Required Role
+
+None
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Required.
+
+```json
+{
+  "email": "admin@hrsystem.com",
+  "password": "YourPassword123"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| email | string | Yes | User email. Validation: required, valid email format. Error: `"Email can't be blank"` / `"Email should be in a proper email address format"` |
+| password | string | Yes | Password. Error: `"Password can't be blank"` |
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "email": "admin@hrsystem.com",
+  "firstName": "System",
+  "lastName": "Admin",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiration": "2026-08-11T18:00:00Z",
+  "role": "Admin"
+}
+```
+
+### Response Fields
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| userId | guid | No | User id |
+| email | string | No | Email |
+| firstName | string | No | First name |
+| lastName | string | No | Last name |
+| token | string | Yes (nullable in DTO) | JWT access token |
+| expiration | datetime | No | Token expiry (UTC) |
+| role | string | No | First role from Identity (e.g. `Admin`, `Employee`, `Applicant`) |
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 500 | Model validation failed (`Problem` with joined error messages) |
+| 500 | Invalid email or password (`Problem("Invalid email or password")`) |
+
+---
+
+## Register Applicant
+
+### Purpose
+
+Create a new applicant account, assign the `Applicant` role, create an applicant profile, and return a JWT.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Account/register-applicant`
+
+### Authentication
+
+Not Required (`[AllowAnonymous]`)
+
+### Required Role
+
+None
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Required.
+
+```json
+{
+  "firstName": "Sara",
+  "lastName": "Ahmad",
+  "email": "sara.ahmad@example.com",
+  "phoneNumber": "0791234567",
+  "password": "Passw0rd",
+  "country": "Jordan",
+  "confirmPassword": "Passw0rd"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| firstName | string | Yes | First name |
+| lastName | string | Yes | Last name |
+| email | string | Yes | Email (used as username) |
+| phoneNumber | string | Yes | Digits only (`^[0-9]*$`) |
+| password | string | Yes | Password (Identity rules apply) |
+| country | string | Yes | Required by DTO validation. **Not currently persisted** by `AuthService` |
+| confirmPassword | string | Yes | Must match `password` |
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "applicant": {
+    "id": 1,
+    "linkedInUrl": null,
+    "portfolioUrl": null,
+    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "role": "Applicant"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiration": "2026-08-11T18:00:00Z",
+  "role": "Applicant",
+  "errors": null,
+  "requiresEmailVerification": false,
+  "message": null
+}
+```
+
+### Response Fields
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| applicant | object | No (on success) | Applicant profile summary |
+| applicant.id | int | No | Applicant id |
+| applicant.linkedInUrl | string | Yes | Present on DTO; not set during registration |
+| applicant.portfolioUrl | string | Yes | Present on DTO; not set during registration |
+| applicant.userId | guid | Yes | Linked Identity user id |
+| applicant.role | string | No | `"Applicant"` |
+| token | string | No | JWT |
+| expiration | datetime | No | Token expiry |
+| role | string | No | `"Applicant"` |
+| errors | string[] | Yes | Identity errors on failure |
+| requiresEmailVerification | bool | Yes | DTO default `false`; not set specially in current registration success path |
+| message | string | Yes | Optional message |
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 500 | Model validation failed |
+| 500 | Identity creation failed (`Problem` with joined `errors`) |
+
+---
+
+## Create Employee / Admin
+
+### Purpose
+
+Admin creates a new user with role `Admin` or `Employee`.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Account/create-employee`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Required.
+
+```json
+{
+  "firstName": "Layla",
+  "lastName": "Hassan",
+  "email": "layla.hr@example.com",
+  "phoneNumber": "0789876543",
+  "password": "Passw0rd",
+  "country": "Jordan",
+  "role": "Employee",
+  "confirmPassword": "Passw0rd"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| firstName | string | Yes | First name |
+| lastName | string | Yes | Last name |
+| email | string | Yes | Email |
+| phoneNumber | string | Yes | Digits only |
+| password | string | Yes | Password |
+| country | string | Yes | Required by validation; **not currently persisted** by `AuthService` |
+| role | string | Yes | Must be `"Admin"` or `"Employee"` (service check) |
+| confirmPassword | string | Yes | Must match password |
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "email": "layla.hr@example.com",
+  "role": "Employee",
+  "firstName": "Layla",
+  "lastName": "Hassan",
+  "message": "User registered successfully",
+  "errors": null
+}
+```
+
+### Response Fields
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| id | guid | No | New user id |
+| email | string | No | Email |
+| role | string | No | Assigned role |
+| firstName | string | No | First name |
+| lastName | string | No | Last name |
+| message | string | No | Status message |
+| errors | string[] | Yes | Errors when registration fails |
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Missing token or not Admin |
+| 500 | Validation failed; invalid role; Identity errors (`Problem` with messages) |
+
+**Invalid role behavior:** Service rejects roles other than `Admin` / `Employee`. The error list text in code is `"Role must be Admin, HR, or Manager"` (message text does not match the actual allowed values).
+
+---
+
+## Verify Email
+
+### Purpose
+
+Verify an applicant email using an OTP code.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Account/verify-email`
+
+### Authentication
+
+Not Required (`[AllowAnonymous]`)
+
+### Required Role
+
+None
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Required.
+
+```json
+{
+  "email": "sara.ahmad@example.com",
+  "code": "123456"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| email | string | Yes | Email address |
+| code | string | Yes | OTP code |
+
+### Success Response (intended)
+
+Controller returns `Ok(auth)` where `auth` is `authenticationResponseDTO`:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiration": "2026-08-11T18:00:00Z"
+}
+```
+
+### Current implementation note
+
+`AuthService.VerifyEmailAsync` currently throws **`NotImplementedException`**. Calling this endpoint will typically result in **500 Internal Server Error** until implemented.
+
+Intended error paths in the controller (when implemented):
+
+| Status | When |
+|---|---|
+| 400 | Invalid model |
+| 500 | `auth == null` → `Problem("Invalid or expired verification code.")` |
+
+---
+
+## Resend Verification
+
+### Purpose
+
+Resend an email verification code.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Account/resend-verification`
+
+### Authentication
+
+Not Required (`[AllowAnonymous]`)
+
+### Required Role
+
+None
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Required.
+
+```json
+{
+  "email": "sara.ahmad@example.com"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| email | string | Yes | Email address |
+
+### Success Response (intended)
+
+**Status:** `200 OK`
+
+```json
+{
+  "message": "Verification code sent if the email exists and is not verified."
+}
+```
+
+### Current implementation note
+
+`AuthService.ResendVerificationAsync` currently throws **`NotImplementedException`**. Calling this endpoint will typically result in **500** until implemented.
+
+Intended error paths:
+
+| Status | When |
+|---|---|
+| 400 | Invalid model |
+| 500 | `ok == false` → `Problem("Unable to resend verification. Check email or try later.")` |
+
+---
+
+## Logout
+
+### Purpose
+
+Signs the user out via Identity `SignOutAsync`. For JWT-based clients, the frontend should also discard the stored token (server-side JWT revocation is not implemented).
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Account/logout`
+
+### Authentication
+
+Required (`[Authorize]`)
+
+### Required Role
+
+Any authenticated user
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `204 No Content`
+
+Empty body.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 | Missing/invalid token |
+
+---
+
+# Jobs
+
+## Get All Jobs (with filters)
+
+### Purpose
+
+List jobs with optional filters. Used for browsing/searching job postings.
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Jobs`
+
+### Authentication
+
+Not Required (`[AllowAnonymous]`)
+
+### Required Role
+
+None
+
+### Headers
+
+No special headers required.
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+| Parameter | Type | Required | Description | Example |
+|---|---|---|---|---|
+| department | string | No | Exact department match | `IT` |
+| location | string | No | Exact location match | `Amman` |
+| employmentType | EmploymentType | No | Enum string name | `FullTime` |
+| workplaceType | WorkplaceType | No | Enum string name | `Remote` |
+| experience | ExperienceLevel | No | Enum string name | `Senior` |
+| isActive | bool | No | If provided, filter by active flag. If omitted (`null`), no active filter is applied | `true` |
+
+Example:
+
+```http
+GET /api/Jobs?department=IT&location=Amman&employmentType=FullTime&isActive=true
+```
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Backend Developer",
+    "description": "Build and maintain ASP.NET APIs",
+    "department": "IT",
+    "location": "Amman",
+    "employmentType": "FullTime",
+    "workplaceType": "Hybrid",
+    "experienceLevel": "MidLevel",
+    "minYearsOfExperience": 3,
+    "requiredSkills": ["C#", "SQL", "Azure"],
+    "postedDate": "2026-08-01T09:00:00Z",
+    "closingDate": "2026-09-01T00:00:00Z",
+    "isActive": true,
+    "createdById": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+  }
+]
+```
+
+### Response Fields (`JobResponseDTO`)
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| id | int | No | Job id |
+| title | string | No | Job title |
+| description | string | No | Description |
+| department | string | No | Department |
+| location | string | No | Location |
+| employmentType | string | No | Enum name |
+| workplaceType | string | No | Enum name |
+| experienceLevel | string | No | Enum name |
+| minYearsOfExperience | int | No | Minimum years |
+| requiredSkills | string[] | No | Skill names |
+| postedDate | datetime | No | When posted (UTC on create) |
+| closingDate | datetime | Yes | Closing date |
+| isActive | bool | No | Active flag |
+| createdById | string | No | Creator user id (GUID as string) |
+
+---
+
+## Get Active Jobs
+
+### Purpose
+
+Return only jobs where `isActive` is true, ordered by newest `postedDate` first.
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Jobs/active`
+
+### Authentication
+
+Not Required (`[AllowAnonymous]`)
+
+### Required Role
+
+None
+
+### Headers
+
+No special headers required.
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+Same item shape as `JobResponseDTO` (array). See Get All Jobs.
+
+---
+
+## Get Job By Id
+
+### Purpose
+
+Get a single job by id. Despite an internal “with details” repository load, the mapped response is still `JobResponseDTO` (no nested applications / createdBy object in the returned payload).
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Jobs/{id}`
+
+### Authentication
+
+Not Required (no `[Authorize]` attribute; global auth filter is disabled)
+
+### Required Role
+
+None
+
+### Headers
+
+No special headers required.
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | int | Yes | Job id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "id": 1,
+  "title": "Backend Developer",
+  "description": "Build and maintain ASP.NET APIs",
+  "department": "IT",
+  "location": "Amman",
+  "employmentType": "FullTime",
+  "workplaceType": "Hybrid",
+  "experienceLevel": "MidLevel",
+  "minYearsOfExperience": 3,
+  "requiredSkills": ["C#", "SQL", "Azure"],
+  "postedDate": "2026-08-01T09:00:00Z",
+  "closingDate": "2026-09-01T00:00:00Z",
+  "isActive": true,
+  "createdById": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 404 | Job not found |
+
+---
+
+## Create Job
+
+### Purpose
+
+Admin or Employee creates a new job posting. Creator is taken from the JWT `sub` claim (user id).
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Jobs`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Required (`JobRequestDTO`).
+
+```json
+{
+  "title": "Backend Developer",
+  "description": "Backend development position",
+  "department": "IT",
+  "location": "Amman",
+  "employmentType": "FullTime",
+  "workplaceType": "Hybrid",
+  "experienceLevel": "MidLevel",
+  "minYearsOfExperience": 3,
+  "requiredSkills": "C#,SQL,Azure",
+  "closingDate": "2026-09-01T00:00:00Z",
+  "isActive": true
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| title | string | Effectively required | Job title (`null!` in DTO; no `[Required]` attribute) |
+| description | string | Effectively required | Description |
+| department | string | Effectively required | Department |
+| location | string | Effectively required | Location |
+| employmentType | EmploymentType | Yes (enum) | String name recommended |
+| workplaceType | WorkplaceType | Yes (enum) | String name recommended |
+| experienceLevel | ExperienceLevel | Yes (enum) | String name recommended |
+| minYearsOfExperience | int | Yes | Minimum years (defaults to `0` if omitted) |
+| requiredSkills | string | Effectively required | **Comma-separated** skill names, e.g. `"C#,SQL,Azure"` (not a JSON array) |
+| closingDate | datetime | No | Nullable |
+| isActive | bool | No | Defaults to `true` |
+
+### Success Response
+
+**Status:** `201 Created`
+
+Location header points to `GET /api/Jobs/{id}`. Body is `JobResponseDTO` (see above). Note: `requiredSkills` in the **response** is a **string array**; in the **request** it is a **comma-separated string**.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 | Missing token or missing user id claim |
+| 403 | Role not Admin/Employee |
+| 500 | Unhandled errors (e.g. creator user issues) |
+
+---
+
+## Update Job
+
+### Purpose
+
+Update an existing job’s fields and replace its required skills.
+
+### HTTP Method
+
+`PUT`
+
+### URL
+
+`/api/Jobs/{id}`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+| Content-Type | Yes | `application/json` | JSON request |
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | int | Yes | Job id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Same as Create Job (`JobRequestDTO`).
+
+### Success Response
+
+**Status:** `204 No Content`
+
+Empty body.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Auth/role failure |
+| 404 | Job not found |
+
+---
+
+## Delete Job
+
+### Purpose
+
+Delete a job by id.
+
+### HTTP Method
+
+`DELETE`
+
+### URL
+
+`/api/Jobs/{id}`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | int | Yes | Job id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `204 No Content`
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Auth/role failure |
+| 404 | Job not found |
+
+---
+
+# Applications
+
+## Apply to a Job
+
+### Purpose
+
+Authenticated applicant submits an application with optional cover letter and required CV file. The service runs CV analysis and stores the application with status `Pending`.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Application/apply`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Applicant`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+| Content-Type | Yes | `multipart/form-data` | File upload (`[Consumes("multipart/form-data")]`) |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+`multipart/form-data` fields (`CreateApplicationDTO`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| jobId | int | Yes | Job to apply for |
+| coverLetter | string | No | Optional cover letter |
+| cvUrl | file | Yes | CV file (`IFormFile`). Validation message: `"CV can't be blank"` |
+
+Example (conceptual form fields):
+
+```text
+jobId: 1
+coverLetter: I am excited to apply for this role...
+cvUrl: (file) resume.pdf
+```
+
+### Success Response
+
+**Status:** `201 Created`
+
+Body is `ApplicationResponseForApplicantDTO`:
+
+```json
+{
+  "id": 10,
+  "jobId": 1,
+  "jobTitle": "Backend Developer",
+  "submittedAt": "2026-08-11T12:00:00Z",
+  "status": "Pending"
+}
+```
+
+### Response Fields
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| id | int | No | Application id |
+| jobId | int | No | Job id |
+| jobTitle | string | No | Job title |
+| submittedAt | datetime | No | Submission time (UTC) |
+| status | string | Yes | Status name (e.g. `"Pending"`) |
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 | Missing token or user id claim |
+| 403 | Not Applicant |
+| 500 | Unhandled service exceptions such as `"Applicant profile not found."`, `"Job not found."`, `"You already applied for this job."`, `"File is empty."`, AI/analysis failures (no dedicated exception middleware) |
+
+---
+
+## Get All Applications
+
+### Purpose
+
+HR/Admin list of applications with optional filters. Includes applicant info, CV path, and CV analysis.
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Application`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+| Parameter | Type | Required | Description | Example |
+|---|---|---|---|---|
+| jobId | int | No | Filter by job | `1` |
+| applicantId | int | No | Filter by applicant profile id | `5` |
+| status | ApplicationStatus | No | Enum name | `Pending` |
+
+Example:
+
+```http
+GET /api/Application?jobId=1&status=Pending
+```
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+[
+  {
+    "id": 10,
+    "jobId": 1,
+    "jobName": "Backend Developer",
+    "applicantId": 5,
+    "applicantEmail": "sara.ahmad@example.com",
+    "applicantName": "Sara Ahmad",
+    "submittedAt": "2026-08-11T12:00:00Z",
+    "status": "Pending",
+    "cvUrl": "C:\\\\path\\\\to\\\\wwwroot\\\\uploads\\\\cvs\\\\guid.pdf",
+    "coverLetter": "I am excited to apply...",
+    "cvAnalysis": {
+      "id": 1,
+      "matchPercentage": 82.5,
+      "aiEvaluationSummary": "Strong match for required backend skills.",
+      "matchedSkills": ["C#", "SQL"],
+      "recommendation": "Interview"
+    }
+  }
+]
+```
+
+### Response Fields (`ApplicationResponseDTO`)
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| id | int | No | Application id |
+| jobId | int | No | Job id |
+| jobName | string | No | Job title |
+| applicantId | int | No | Applicant profile id |
+| applicantEmail | string | No | Applicant email |
+| applicantName | string | No | Full name |
+| submittedAt | datetime | No | Submitted at |
+| status | string | Yes | Status name |
+| cvUrl | string | Yes | Stored CV path |
+| coverLetter | string | Yes | Cover letter |
+| cvAnalysis | object | Yes | AI analysis (`CVAnalysisDTO`) |
+| cvAnalysis.id | int | No | Analysis id |
+| cvAnalysis.matchPercentage | decimal | No | Match score |
+| cvAnalysis.aiEvaluationSummary | string | No | AI summary |
+| cvAnalysis.matchedSkills | string[] | No | Matched skills |
+| cvAnalysis.recommendation | string | No | Recommendation text |
+
+---
+
+## Get Application By Id
+
+### Purpose
+
+Get one application with full HR-facing details (`ApplicationResponseDTO`), including CV analysis.
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Application/{id}`
+
+### Authentication
+
+Required (`[Authorize]` — any authenticated role)
+
+### Required Role
+
+Any authenticated user
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | int | Yes | Application id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+Same shape as a single `ApplicationResponseDTO` item (see Get All Applications).
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 | Unauthorized |
+| 404 | Controller checks for `null` |
+| 500 | Service throws `KeyNotFoundException("Application not found.")` when missing (may surface as 500 instead of 404 in the current implementation) |
+
+---
+
+## Get Applications By Job Id
+
+### Purpose
+
+List all applications for a specific job (HR view).
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Application/job/{jobId}`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| jobId | int | Yes | Job id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+Array of `ApplicationResponseDTO` (same as Get All Applications).
+
+---
+
+## Get My Applications
+
+### Purpose
+
+Applicant views their own applications (summary DTO without CV analysis).
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Application/me`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Applicant`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+[
+  {
+    "id": 10,
+    "jobId": 1,
+    "jobTitle": "Backend Developer",
+    "submittedAt": "2026-08-11T12:00:00Z",
+    "status": "Pending"
+  }
+]
+```
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 | Missing token / user id claim |
+| 403 | Not Applicant |
+| 500 | `"Applicant not found for this user."` if no applicant profile |
+
+**Routing note:** Declare/call `/api/Application/me` before relying on `/api/Application/{id}` clients incorrectly treating `"me"` as an id. The controller defines `me` as a separate action; ASP.NET Core matches the literal route.
+
+---
+
+## Update Application Status
+
+### Purpose
+
+HR/Admin changes an application’s status.
+
+### HTTP Method
+
+`PUT`
+
+### URL
+
+`/api/Application/{id}/status`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+| Content-Type | Yes | `application/json` | JSON body is a **string** |
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | int | Yes | Application id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Raw JSON string (not an object):
+
+```json
+"Reviewing"
+```
+
+Allowed values (case-insensitive): `Pending`, `Reviewing`, `Accepted`, `Rejected`.
+
+### Success Response
+
+**Status:** `204 No Content`
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 400 | Empty status → `"Status is required."` |
+| 400 | Invalid value → `"Invalid status value."` |
+| 401 / 403 | Auth/role failure |
+| 404 | Application not found |
+
+---
+
+## Delete Application
+
+### Purpose
+
+Delete an application by id.
+
+### HTTP Method
+
+`DELETE`
+
+### URL
+
+`/api/Application/{id}`
+
+### Authentication
+
+Required
+
+### Required Role
+
+`Admin` or `Employee`
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Authorization | Yes | `Bearer {token}` | JWT |
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | int | Yes | Application id |
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `204 No Content`
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Auth/role failure |
+| 404 | Application not found |
+
+---
+
+# Documents / CV Text Extraction
+
+## Extract Text From Document
+
+### Purpose
+
+Upload a CV/document file, save it under `uploads/cvs`, and return extracted text. Supports `.pdf` and `.docx` in `DocumentService`.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/Document/extract`
+
+### Authentication
+
+Not Required (no `[Authorize]` on this action)
+
+### Required Role
+
+None
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Content-Type | Yes | `multipart/form-data` | File upload |
+
+**Note:** Controllers globally declare `Consumes("application/json")` in `Program.cs`. This action does **not** override with `[Consumes("multipart/form-data")]` (unlike Apply). If uploads fail with content-type errors, this mismatch is the likely cause.
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+No query parameters.
+
+### Request Body
+
+Form file parameter named **`file`** (`IFormFile file`).
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "filePath": "C:\\\\...\\\\wwwroot\\\\uploads\\\\cvs\\\\{guid}.pdf",
+  "text": "Extracted document text..."
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|---|---|---|
+| filePath | string | Saved file path returned by `FileService` |
+| text | string | Extracted text |
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 500 | Empty file (`"File is empty."`); unsupported extension (`"Unsupported file type"`); other processing errors |
+
+---
+
+# Gemini Test
+
+## Test Gemini
+
+### Purpose
+
+Development/test helper that sends a prompt to the configured Gemini model and returns the raw API response string.
+
+### HTTP Method
+
+`POST`
+
+### URL
+
+`/api/GeminiTest/test`
+
+### Authentication
+
+Not Required (no `[Authorize]`)
+
+### Required Role
+
+None
+
+### Headers
+
+| Header | Required | Value | Description |
+|---|---|---|---|
+| Content-Type | Depends | `application/json` if a body is sent | Global consumes is JSON; this action mainly uses a query parameter |
+
+### Path Parameters
+
+No path parameters.
+
+### Query Parameters
+
+| Parameter | Type | Required | Description | Example |
+|---|---|---|---|---|
+| prompt | string | Effectively yes | Text prompt sent to Gemini | `Summarize this CV` |
+
+Example:
+
+```http
+POST /api/GeminiTest/test?prompt=Hello
+```
+
+### Request Body
+
+None required by the action signature.
+
+### Success Response
+
+**Status:** `200 OK`
+
+Body is the **raw string** returned from Gemini (JSON text from Google’s API), not a strongly typed DTO.
+
+### Notes
+
+- Uses `Gemini:ApiKey` and `Gemini:Model` from configuration.
+- Do not expose API keys in frontend code; this endpoint is a backend test utility.
+
+---
+
+# 8. Quick Reference Table
+
+| Method | URL | Auth | Roles |
+|---|---|---|---|
+| POST | `/api/Account/login` | No | — |
+| POST | `/api/Account/register-applicant` | No | — |
+| POST | `/api/Account/create-employee` | Yes | Admin |
+| POST | `/api/Account/verify-email` | No | — (not implemented in service) |
+| POST | `/api/Account/resend-verification` | No | — (not implemented in service) |
+| GET | `/api/Account/logout` | Yes | Any authenticated |
+| GET | `/api/Jobs` | No | — |
+| GET | `/api/Jobs/active` | No | — |
+| GET | `/api/Jobs/{id}` | No | — |
+| POST | `/api/Jobs` | Yes | Admin, Employee |
+| PUT | `/api/Jobs/{id}` | Yes | Admin, Employee |
+| DELETE | `/api/Jobs/{id}` | Yes | Admin, Employee |
+| POST | `/api/Application/apply` | Yes | Applicant |
+| GET | `/api/Application` | Yes | Admin, Employee |
+| GET | `/api/Application/{id}` | Yes | Any authenticated |
+| GET | `/api/Application/job/{jobId}` | Yes | Admin, Employee |
+| GET | `/api/Application/me` | Yes | Applicant |
+| PUT | `/api/Application/{id}/status` | Yes | Admin, Employee |
+| DELETE | `/api/Application/{id}` | Yes | Admin, Employee |
+| POST | `/api/Document/extract` | No | — |
+| POST | `/api/GeminiTest/test` | No | — |
+
+---
+
+# 9. Typical Frontend Flows
+
+## Applicant flow
+
+1. `POST /api/Account/register-applicant` → store `token`
+2. `GET /api/Jobs` or `/api/Jobs/active` → show openings
+3. `GET /api/Jobs/{id}` → job details
+4. `POST /api/Application/apply` (multipart + Bearer token)
+5. `GET /api/Application/me` → track applications
+
+## HR / Admin flow
+
+1. `POST /api/Account/login` → store `token` (`Admin` or `Employee`)
+2. `POST /api/Jobs` → create posting
+3. `GET /api/Application?jobId={id}` → review applicants
+4. `GET /api/Application/{id}` → view CV analysis
+5. `PUT /api/Application/{id}/status` with body `"Accepted"` / `"Rejected"` / etc.
+
+---
+
+# 10. Implementation Caveats (for integrators)
+
+These are behaviors observed in the current code that frontend developers should be aware of:
+
+1. **Invalid login returns 500** via `Problem(...)`, not 401.
+2. **Email verification endpoints exist but are not implemented** in `AuthService` (`NotImplementedException`).
+3. **`country` is required** on register/create-employee DTOs but is **not saved** by the auth service.
+4. **Job request `requiredSkills`** is a comma-separated **string**; job responses return a **string array**.
+5. **Apply** returns the smaller `ApplicationResponseForApplicantDTO`, not the HR `ApplicationResponseDTO`.
+6. **No CORS configuration** is registered in `Program.cs`. Browser clients on another origin may need backend CORS enabled.
+7. **JWT `NameIdentifier` claim is set to email** in `JwtService`, while `sub` is the user GUID. Controllers prefer `sub` for user id — keep using tokens issued by this API.
+8. Secrets (JWT signing key, connection strings, Gemini API key) live in server configuration and must **never** be embedded in the frontend.
+
+---
+
+*Generated from the ASP.NET Core project source (controllers, DTOs, services, enums, and configuration). Only behavior present in the codebase is documented.*

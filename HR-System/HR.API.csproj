@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	 
     <RootNamespace>HR.API</RootNamespace>
+	 
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	 
+    <DocumentationFile>HRSystemAPI.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

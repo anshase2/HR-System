@@ -38,7 +38,7 @@ namespace HR_System.Controllers
 
 
         /// <summary>
-        /// 
+        /// create new hr employee
         /// </summary>
         /// <param name="registerDTO"></param>
         /// <returns></returns>
@@ -68,7 +68,11 @@ namespace HR_System.Controllers
 
             return response;
         }
-
+        /// <summary>
+        ///  Register new applicant       
+        /// </summary>
+        /// <param name="registerDTO"></param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("register-applicant")]
         public async Task<ActionResult<ApplicantResponseDTO>> PostRegisterApplicant(RegisterApplicantDTO registerDTO)
@@ -146,7 +150,7 @@ namespace HR_System.Controllers
 
 
         /// <summary>
-        /// 
+        /// Login
         /// </summary>
         /// <param name="loginDTO"></param>
         /// <returns></returns>
@@ -176,7 +180,7 @@ namespace HR_System.Controllers
 
 
         /// <summary>
-        /// 
+        /// Logout
         /// </summary>
         /// <returns></returns>
         [Authorize]        
