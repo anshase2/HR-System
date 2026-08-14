@@ -1,88 +1,148 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import jobs from "../../data/jobs";
+import { getJobs } from "../../services/jobService";
+
 export default function Dashboard() {
   const [period, setPeriod] = useState("Monthly");
   const [jobSearch, setJobSearch] = useState("");
- const [selectedDepartment, setSelectedDepartment] = useState("");
- const [selectedJob, setSelectedJob] = useState(null); 
- 
- const dashboardData = {
-  Today: {
-    jobs: 2,
-    applicants: 8,
-    interviews: 1,
-    hired: 0,
-  },
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [jobsError, setJobsError] = useState("");
 
-  "Last 7 Days": {
-    jobs: 9,
-    applicants: 52,
-    interviews: 14,
-    hired: 3,
-  },
+  const dashboardData = {
+    Today: {
+      jobs: 2,
+      applicants: 8,
+      interviews: 1,
+      hired: 0,
+    },
 
-  Monthly: {
-    jobs: 24,
-    applicants: 186,
-    interviews: 32,
-    hired: 11,
-  },
+    "Last 7 Days": {
+      jobs: 9,
+      applicants: 52,
+      interviews: 14,
+      hired: 3,
+    },
 
-  "Last 6 Months": {
-    jobs: 71,
-    applicants: 845,
-    interviews: 164,
-    hired: 42,
-  },
+    Monthly: {
+      jobs: 24,
+      applicants: 186,
+      interviews: 32,
+      hired: 11,
+    },
 
-  Yearly: {
-    jobs: 152,
-    applicants: 2134,
-    interviews: 417,
-    hired: 109,
-  },
-};
-const stats = dashboardData[period];
-const [jobPostings, setJobPostings] = useState([
-  {
-    id: 1,
-    position: "Senior Software Engineer",
-    department: "Software Engineering",
-    status: "Active",
-    applications: 24,
-    published: "2 days ago",
-  },
-  {
-    id: 2,
-    position: "Frontend Developer",
-    department: "Frontend Development",
-    status: "Active",
-    applications: 17,
-    published: "Yesterday",
-  },
-  {
-    id: 3,
-    position: "AI Engineer",
-    department: "Artificial Intelligence",
-    status: "Draft",
-    applications: 8,
-    published: "Today",
-  },
-]);
+    "Last 6 Months": {
+      jobs: 71,
+      applicants: 845,
+      interviews: 164,
+      hired: 42,
+    },
 
-const filteredJobs = jobPostings.filter((job) => {
-  const matchesSearch =
-    job.position.toLowerCase().includes(jobSearch.toLowerCase()) ||
-    job.department.toLowerCase().includes(jobSearch.toLowerCase());
+    Yearly: {
+      jobs: 152,
+      applicants: 2134,
+      interviews: 417,
+      hired: 109,
+    },
+  };
 
-  const matchesDepartment =
-    selectedDepartment === "" ||
-    job.department === selectedDepartment;
+  const stats = dashboardData[period];
 
-  return matchesSearch && matchesDepartment;
-});
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadJobs() {
+      setJobsLoading(true);
+      setJobsError("");
+
+      try {
+        const response = await getJobs();
+        const sortedJobs = Array.isArray(response)
+          ? [...response].sort((a, b) => {
+              const aDate = a && a.closingDate ? new Date(a.closingDate).getTime() : Number.POSITIVE_INFINITY;
+              const bDate = b && b.closingDate ? new Date(b.closingDate).getTime() : Number.POSITIVE_INFINITY;
+              return aDate - bDate;
+            })
+          : [];
+
+        if (isMounted) {
+          setJobs(sortedJobs);
+        }
+      } catch (error) {
+        console.error("Failed to load jobs:", error);
+
+        if (isMounted) {
+          setJobs([]);
+          setJobsError("Failed to load jobs.");
+        }
+      } finally {
+        if (isMounted) {
+          setJobsLoading(false);
+        }
+      }
+    }
+
+    loadJobs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      (job.title || "").toLowerCase().includes(jobSearch.toLowerCase()) ||
+      (job.department || "").toLowerCase().includes(jobSearch.toLowerCase());
+
+    const matchesDepartment =
+      selectedDepartment === "" ||
+      job.department === selectedDepartment;
+
+    return matchesSearch && matchesDepartment;
+  });
+
+  const normalizeSkills = (value) => {
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => {
+        if (typeof item === "string") {
+          return item
+            .split(",")
+            .map((skill) => skill.trim())
+            .filter(Boolean);
+        }
+
+        if (item && typeof item === "object") {
+          const skillName = item.name || item.skill || item.title || item.value;
+          return typeof skillName === "string" && skillName.trim() ? [skillName.trim()] : [];
+        }
+
+        return [];
+      });
+    }
+
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "—";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString();
+  };
 
   const navigate = useNavigate();
   return (
@@ -260,126 +320,118 @@ const filteredJobs = jobPostings.filter((job) => {
   >
     <option value="">Departments</option>
 
-    <option value="Software Engineering">
-      Software Engineering
+    <option value="IT">
+      IT
     </option>
 
-    <option value="Frontend Development">
-      Frontend Development
+    <option value="Sales">
+      Sales
     </option>
 
-    <option value="Artificial Intelligence">
-      Artificial Intelligence
+    <option value="HR">
+      HR
     </option>
 
-    <option value="Quality Assurance">
-      Quality Assurance
+    <option value="Marketing">
+      Marketing
     </option>
 
-    <option value="DevOps">
-      DevOps
+    <option value="Customer Support">
+      Customer Support
+    </option>
+     <option value="Operations">
+      Operations
     </option>
   </select>
 </div>
             </div>
 
-            <table className="w-full border-collapse">
+            {jobsLoading ? (
+              <div className="py-8 text-center text-gray-600">Loading jobs...</div>
+            ) : jobsError ? (
+              <div className="py-8 text-center text-red-600">{jobsError}</div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="py-8 text-center text-gray-600">No active jobs available.</div>
+            ) : (
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 border-b">
+                    <th className="text-left p-4">Position</th>
+                    <th className="text-left p-4">Department</th>
+                    <th className="text-left p-4">Status</th>
+                    <th className="text-left p-4">Applications</th>
+                    <th className="text-left p-4">Posted</th>
+                    <th className="text-left p-4">Actions</th>
+                  </tr>
+                </thead>
 
-              <thead>
+                <tbody>
+                  {filteredJobs.map((job) => {
+                    const inactive = job.isActive === false;
 
-                <tr className="bg-gray-100 border-b">
+                    return (
+                    <tr key={job.id} className={`border-b hover:bg-gray-50 ${inactive ? "bg-red-50/60" : ""}`}>
+                      <td className={`p-4 font-medium ${inactive ? "text-red-700" : ""}`}>{job.title}</td>
 
-                  <th className="text-left p-4">Position</th>
-                  <th className="text-left p-4">Department</th>
-                  <th className="text-left p-4">Status</th>
-                  <th className="text-left p-4">Applications</th>
-                  <th className="text-left p-4">Published</th>
-                  <th className="text-left p-4">Actions</th>
+                      <td className={`p-4 ${inactive ? "text-red-700" : ""}`}>{job.department}</td>
 
-                </tr>
+                      <td className="p-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm border ${
+                            inactive
+                              ? "bg-red-100 text-red-700 border-red-200"
+                              : "bg-green-100 text-green-700 border-green-200"
+                          }`}
+                        >
+                          {job.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
 
-              </thead>
+                      <td className="p-4">{job.applications ?? "-"}</td>
 
-              <tbody>
-  {filteredJobs.map((job) => (
-    <tr
-      key={job.id}
-      className="border-b hover:bg-gray-50"
-    >
-      <td className="p-4 font-medium">
-        {job.position}
-      </td>
+                      <td className="p-4">{formatDate(job.postedDate)}</td>
 
-      <td className="p-4">
-        {job.department}
-      </td>
+                      <td className={`p-4 ${inactive ? "text-red-700" : ""}`}>
+                        <div className="flex gap-2">
+                          <Link
+                            to={`/dashboard/edit/${job.id}`}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                          >
+                            Edit
+                          </Link>
 
-      <td className="p-4">
-        <span
-          className={
-            job.status === "Active"
-              ? "bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
-              : "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm"
-          }
-        >
-          {job.status}
-        </span>
-      </td>
+                          <button
+                            onClick={() => setSelectedJob(job)}
+                            className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
+                          >
+                            View
+                          </button>
 
-      <td className="p-4">
-        {job.applications}
-      </td>
+                          <button
+                            onClick={() => {
+                              const confirmed = window.confirm(
+                                `Are you sure you want to delete "${job.title}"?`
+                              );
 
-      <td className="p-4">
-        {job.published}
-      </td>
-
-      <td className="p-4">
-        <div className="flex gap-2">
-
-          <Link
-            to={`/dashboard/edit/${job.id}`}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Edit
-          </Link>
-
-          <button
-  onClick={() => setSelectedJob(job)}
-  className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
->
-  View
-</button>
-
-          <button
-  onClick={() => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${job.position}"?`
-    );
-
-    if (confirmed) {
-      setJobPostings((prevJobs) =>
-        prevJobs.filter((item) => item.id !== job.id)
-      );
-    }
-  }}
-  className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"
->
-  Delete
-</button>
-
-        </div>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
-</table>
+                              if (confirmed) {
+                                setJobs((prevJobs) => prevJobs.filter((item) => item.id !== job.id));
+                              }
+                            }}
+                            className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
 
 {selectedJob && (() => {
-  const jobDetails = jobs.find(
-    (job) => job.id === selectedJob.id
-  );
+  const jobDetails = selectedJob;
 
   if (!jobDetails) return null;
 
@@ -469,21 +521,21 @@ const filteredJobs = jobPostings.filter((job) => {
 
             <div className="bg-gray-50 rounded-lg p-5">
               <p className="text-gray-500 text-sm">
-                Salary Range
+                Experience Level
               </p>
 
               <p className="font-semibold mt-2">
-                {jobDetails.salary || "Not specified"}
+                {jobDetails.experienceLevel || "Not specified"}
               </p>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-5">
               <p className="text-gray-500 text-sm">
-                Application Deadline
+                Closing Date
               </p>
 
               <p className="font-semibold mt-2">
-                {jobDetails.deadline || "Not specified"}
+                {formatDate(jobDetails.closingDate)}
               </p>
             </div>
 
@@ -494,14 +546,12 @@ const filteredJobs = jobPostings.filter((job) => {
 
               <span
                 className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
-                  jobDetails.status === "Active"
+                  jobDetails.isActive
                     ? "bg-green-100 text-green-700"
-                    : jobDetails.status === "Draft"
-                    ? "bg-yellow-100 text-yellow-700"
                     : "bg-red-100 text-red-700"
                 }`}
               >
-                {jobDetails.status}
+                {jobDetails.isActive ? "Active" : "Inactive"}
               </span>
             </div>
 
@@ -529,16 +579,22 @@ const filteredJobs = jobPostings.filter((job) => {
 
             <div className="flex flex-wrap gap-2 mt-4">
 
-              {jobDetails.requiredSkills.map(
-                (skill, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"
-                  >
-                    {skill}
-                  </span>
-                )
-              )}
+              {(() => {
+                const skills = normalizeSkills(jobDetails.requiredSkills);
+
+                return skills.length > 0 ? (
+                  skills.map((skill, index) => (
+                    <span
+                      key={`${skill}-${index}`}
+                      className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"
+                    >
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">No skills listed.</span>
+                );
+              })()}
 
             </div>
 

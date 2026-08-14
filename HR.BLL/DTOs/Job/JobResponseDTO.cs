@@ -35,6 +35,7 @@ namespace HR.BLL.DTOs.Job
         public bool IsActive { get; set; }
 
         public string CreatedById { get; set; } = null!;
+        public int? NumberOfApplications { get; set; }
 
         /* public ICollection<Application> Applications { get; set; }
              = new List<Application>();*/

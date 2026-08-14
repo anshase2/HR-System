@@ -16,6 +16,35 @@ function formatDate(value) {
   });
 }
 
+function normalizeSkills(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => {
+      if (typeof item === "string") {
+        return item
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean);
+      }
+
+      if (item && typeof item === "object") {
+        const skillName = item.name || item.skill || item.title || item.value;
+        return typeof skillName === "string" && skillName.trim() ? [skillName.trim()] : [];
+      }
+
+      return [];
+    });
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -99,6 +128,8 @@ export default function JobDetails() {
     );
   }
 
+  const normalizedSkills = normalizeSkills(job.requiredSkills);
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-5xl mx-auto py-16 px-8">
@@ -170,10 +201,10 @@ export default function JobDetails() {
 
           <h2 className="text-2xl font-bold mt-10">Required Skills</h2>
 
-          {job.requiredSkills?.length ? (
+          {normalizedSkills.length > 0 ? (
             <ul className="list-disc ml-6 mt-4 space-y-2 text-gray-600">
-              {job.requiredSkills.map((skill) => (
-                <li key={skill}>{skill}</li>
+              {normalizedSkills.map((skill, index) => (
+                <li key={`${skill}-${index}`}>{skill}</li>
               ))}
             </ul>
           ) : (

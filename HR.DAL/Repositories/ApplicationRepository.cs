@@ -17,7 +17,11 @@ namespace HR.DAL.Repositories
         {
             _db = db;
         }
-
+        public async Task<int> CountByJobIdAsync(int jobId)
+        {
+            return await _db.Applications
+                .CountAsync(a => a.JobId == jobId);
+        }
         public async Task<IEnumerable<Application>> GetByApplicantIdAsync(int applicantId)
         {
             return await _db.Applications.Include(a => a.Job).Where(a => a.ApplicantId == applicantId).ToListAsync();

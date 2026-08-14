@@ -1,25 +1,66 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../../hooks/useAuth.jsx";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleLogin = () => {
+  const validateEmail = (value) => {
+    return /\S+@\S+\.\S+/.test(value);
+  };
+
+  const handleLogin = async () => {
+    setError(null);
     if (!email || !password) {
-      alert("Please enter your email and password.");
+      setError("Please enter your email and password.");
       return;
     }
 
-    if (email === "hr@itg.com" && password === "123456") {
-  navigate("/dashboard");
-} else {
-  navigate("/home");
-}
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (loading) return;
+
+    setLoading(true);
+    try {
+      const resp = await login(email, password);
+      // Redirect based on role (minimal, per APIdoc roles)
+      const role = resp.role;
+      const from = location.state?.from?.pathname;
+      if (from) {
+        navigate(from, { replace: true });
+        return;
+      }
+
+      if (role === "Admin" || role === "Employee") {
+        navigate("/dashboard");
+      } else {
+        // Applicant or other
+        navigate("/home");
+      }
+    } catch (err) {
+      // apiClient throws ApiError with message and status
+      const msg = err && err.message ? err.message : "Login failed. Please try again.";
+      // Special-case backend behavior: invalid credentials currently return 500 with ProblemDetails
+      if (err && err.status === 500 && typeof err.details === "string" && err.details.includes("Invalid email or password")) {
+        setError("Invalid email or password.");
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,6 +72,10 @@ export default function LoginForm() {
       <p className="text-gray-500 mt-2 mb-8">
         Sign in to your ITG account
       </p>
+
+      {error && (
+        <div className="mb-4 text-sm text-red-600">{error}</div>
+      )}
 
       {/* Email */}
       <div className="mb-5">
@@ -109,9 +154,10 @@ export default function LoginForm() {
       {/* Login */}
       <button
         onClick={handleLogin}
-        className="w-full h-14 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+        disabled={loading}
+        className={`w-full h-14 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
       >
-        Login
+        {loading ? "Signing in..." : "Login"}
       </button>
 
       {/* Divider */}

@@ -61,6 +61,7 @@ namespace HR.BLL.Services
                 CvUrl = cvUrl,
                 SubmittedAt = DateTime.UtcNow,
                 Status = ApplicationStatus.Pending,
+                
 
             };           
           var AIanalysis=await _cvAnalysisService.AnalyzeApplicationAsync(application);

@@ -27,12 +27,14 @@ namespace HR.BLL.Services
         private readonly IJobRepository _jobRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ISkillRepository _skillRepository;
+        private readonly IApplicationRepository _applicationRepository;
 
-        public JobService(IJobRepository jobRepository,  UserManager<ApplicationUser> userManager, ISkillRepository skillRepository)
+        public JobService(IJobRepository jobRepository,  UserManager<ApplicationUser> userManager, ISkillRepository skillRepository, IApplicationRepository applicationRepository)
         {
             _jobRepository = jobRepository;
             _userManager = userManager;
             _skillRepository = skillRepository;
+            _applicationRepository = applicationRepository;
         }
 
         /// <summary>
@@ -56,7 +58,23 @@ namespace HR.BLL.Services
           
 
             var jobs = await _jobRepository.FilterJobsAsync(department, location,workplaceType , experience, employmentType, isActive);
-            return jobs.Select(MapToDto).ToList();
+            var result = new List<JobResponseDTO>();
+
+            foreach (var job in jobs)
+            {
+                var numberOfApplications =
+                    await _applicationRepository.CountByJobIdAsync(job.Id);
+
+                var dto = MapToDto(job);
+
+                dto.NumberOfApplications = numberOfApplications;
+
+                result.Add(dto);
+            }
+
+            return result;
+
+           // return jobs.Select(MapToDto).ToList();
         }
       
         public async Task<JobResponseDTO?> GetByIdAsync(int id) // Get job by ID without details for applicants
@@ -149,6 +167,7 @@ namespace HR.BLL.Services
             var jobs = await _jobRepository.GetActiveJobsAsync();
             return jobs.Select(MapToDto).ToList();
         }
+     
 
         public async Task<IEnumerable<JobResponseDTO>> GetJobsByCreatorAsync(Guid employeeId /*user id for employee*/)
         {
@@ -226,7 +245,7 @@ namespace HR.BLL.Services
                 ClosingDate = job.ClosingDate,
                 IsActive = job.IsActive,
                 CreatedById = job.CreatedById.ToString(),
-               
+
             };
         }
 
@@ -272,7 +291,8 @@ namespace HR.BLL.Services
                     CvUrl = a.CvUrl,
                     CoverLetter = a.CoverLetter
 
-                }).ToList()
+                }).ToList(),
+                NumberOfApplications = job.Applications.Count
             }; 
         }
 

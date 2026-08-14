@@ -21,6 +21,7 @@ import Analytics from "../pages/hr/Analytics";
 import Candidates from "../pages/hr/Candidates";
 import Settings from "../pages/hr/Settings";
 import CreateJob from "../pages/hr/CreateJob";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 function AppRouter() {
   return (
@@ -35,7 +36,14 @@ function AppRouter() {
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/profile" element={<Profile />} />
-       <Route path="/apply/:id" element={<ApplicationForm />} />
+       <Route
+         path="/apply/:id"
+         element={
+           <ProtectedRoute roles={["Applicant"]}>
+             <ApplicationForm />
+           </ProtectedRoute>
+         }
+       />
        <Route path="/about" element={<About />} />
         
 
@@ -48,14 +56,63 @@ function AppRouter() {
          />
 
 
-        {/* HR */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/applicants" element={<Applicants />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/dashboard/edit/:id" element={<EditJob />} />
-        <Route path="/candidates" element={<Candidates />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/create-job" element={<CreateJob />} />
+        {/* HR (Admin or Employee) */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applicants"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <Applicants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/edit/:id"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <EditJob />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/candidates"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <Candidates />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-job"
+          element={
+            <ProtectedRoute roles={["Admin", "Employee"]}>
+              <CreateJob />
+            </ProtectedRoute>
+          }
+        />
 
       </Routes>
     </BrowserRouter>

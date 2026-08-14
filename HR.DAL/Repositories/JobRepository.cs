@@ -45,7 +45,7 @@ namespace HR.DAL.Repositories
             
             return await _db.Jobs.Include(j => j.RequiredSkills).Where(j => j.IsActive).OrderByDescending(j => j.PostedDate).ToListAsync();
         }
-
+      
         public async Task<Job?> GetByIdWithDetailsAsync(int id)
         {
             return await _db.Jobs
