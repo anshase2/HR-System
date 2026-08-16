@@ -85,12 +85,12 @@ namespace HR_System.Controllers
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
+
             if (string.IsNullOrWhiteSpace(status))
                 return BadRequest("Status is required.");
-
+            status = status.Trim('"');
             if (!Enum.TryParse<ApplicationStatus>(status, true, out var parsed))
-                return BadRequest("Invalid status value.");
-
+                return BadRequest($"Invalid status value. Received: [{status}]");
             var updated = await _applicationService.UpdateStatusAsync(id, parsed);
             if (!updated)
                 return NotFound();

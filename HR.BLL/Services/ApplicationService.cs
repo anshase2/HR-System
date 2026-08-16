@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Bibliography;
 using HR.BLL.DTOs.Ai;
 using HR.BLL.DTOs.Application;
 using HR.BLL.Interfaces;
@@ -6,6 +7,7 @@ using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
 using HR.DAL.enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,18 +25,20 @@ namespace HR.BLL.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileService _fileService;
         private readonly ICVAnalysisService _cvAnalysisService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public ApplicationService(HR.DAL.IRepositories.IApplicationRepository applicationRepository,
             HR.DAL.IRepositories.IApplicantRepository applicantRepository,
             HR.DAL.IRepositories.IJobRepository jobRepository,
             UserManager<ApplicationUser> userManager,
             IFileService fileService,
-            ICVAnalysisService cvAnalysisService)
+            ICVAnalysisService cvAnalysisService,IHttpContextAccessor httpContextAccessor)
         {
             _applicationRepository = applicationRepository;
             _applicantRepository = applicantRepository;
             _jobRepository = jobRepository;
             _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
             _cvAnalysisService = cvAnalysisService;
             _fileService = fileService;
         }
@@ -177,17 +181,27 @@ namespace HR.BLL.Services
             var applicant = await _applicantRepository.GetByIdAsync(app.ApplicantId);
             var user = applicant == null ? null : await _userManager.FindByIdAsync(applicant.UserId.ToString());
             var job = await _jobRepository.GetByIdAsync(app.JobId);
+            var cvUrl = string.Empty;
+
+            if (!string.IsNullOrEmpty(app.CvUrl))
+            {
+                var fileName = Path.GetFileName(app.CvUrl);
+
+                var request = _httpContextAccessor.HttpContext!.Request;
+
+                cvUrl = $"{request.Scheme}://{request.Host}/uploads/cvs/{fileName}";
+            }
 
             return new ApplicationResponseDTO
             {
                 Id = app.Id,
                 JobId = app.JobId,
-                ApplicantEmail = user.Email ,
+                ApplicantEmail = user?.Email ?? string.Empty,
                 ApplicantName = user == null ? string.Empty : $"{user.FirstName} {user.LastName}",
                 JobName = job?.Title ?? string.Empty,
                 ApplicantId = app.ApplicantId,
                 CoverLetter = app.CoverLetter,
-                CvUrl = app.CvUrl,
+                CvUrl = cvUrl,
                 Status = app.Status.ToString(),
                 SubmittedAt = app.SubmittedAt,
                 CVAnalysis =  new CVAnalysisDTO

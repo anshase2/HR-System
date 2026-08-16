@@ -32,7 +32,7 @@ namespace HR.DAL.Repositories
             return await _db.Applications.Include(a => a.Job)
                  .Include(a => a.CVAnalysis)
 
-                .Include(a => a.JobId)
+             //   .Include(a => a.JobId)
                 .Include(a => a.Applicant)
                 .ThenInclude(a => a.User)
                 .Where(a => a.JobId == jobId).ToListAsync();
