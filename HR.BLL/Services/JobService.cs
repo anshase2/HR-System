@@ -153,10 +153,23 @@ namespace HR.BLL.Services
         }
         public async Task<bool> DeleteAsync(int id)
         {
-            var job = await _jobRepository.GetByIdAsync(id);
-            if (job == null) return false;
+            var job = await _jobRepository.GetByIdWithDetailsAsync(id);
+
+            if (job == null)
+                return false;
+
+            // Delete Applications related to the Job
+            await _applicationRepository.DeleteByJobIdAsync(id);
+
+            // Remove Job-Skill relationships
+            job.RequiredSkills.Clear();
+
+            // Delete Job
             _jobRepository.Delete(job);
+
+            // Save everything
             await _jobRepository.SaveChangesAsync();
+
             return true;
         }
 

@@ -7,6 +7,7 @@ namespace HR.DAL.IRepositories
 {
     public interface IApplicationRepository : IGenericRepository<Application>
     {
+        Task DeleteByJobIdAsync(int jobId);
         Task<IEnumerable<Application>> GetByApplicantIdAsync(int applicantId);
         Task<IEnumerable<Application>> GetByJobIdAsync(int jobId);
          Task<IEnumerable<Application>> GetAllApplicationsAsync(int? jobId, int? applicantId, ApplicationStatus? status);

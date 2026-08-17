@@ -1,5 +1,13 @@
 import { apiRequest } from "./apiClient";
 
+export async function applyForJob(formData) {
+  return apiRequest("/Application/apply", {
+    method: "POST",
+    body: formData,
+    auth: true,
+  });
+}
+
 export async function getApplicationsByJob(jobId) {
   return apiRequest(`/Application/job/${jobId}`, { auth: true });
 }

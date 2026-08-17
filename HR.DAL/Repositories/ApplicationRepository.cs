@@ -82,5 +82,13 @@ namespace HR.DAL.Repositories
                 .Where(a => a.Status == status)
                 .ToListAsync();
         }
+        public async Task DeleteByJobIdAsync(int jobId)
+        {
+            var applications = await _db.Applications
+                .Where(a => a.JobId == jobId)
+                .ToListAsync();
+
+            _db.Applications.RemoveRange(applications);
+        }
     }
 }

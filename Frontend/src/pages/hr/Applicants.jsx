@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ApplicantDetailsModal from "../../components/applicant/ApplicantDetailsModal";
 import { getActiveJobs } from "../../services/jobService";
 import {
   getApplicationsByJob,
@@ -491,147 +492,10 @@ export default function Applicants() {
           )}
 
           {selectedApplicant && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="p-8 border-b">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-3xl font-bold text-gray-900">
-                        {selectedApplicant.applicantName || "Applicant"}
-                      </h2>
-
-                      <p className="text-gray-500 mt-2">
-                        {selectedApplicant.jobName || selectedApplicant.jobTitle || selectedJob?.title || "-"}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setSelectedApplicant(null)}
-                      className="text-gray-400 hover:text-gray-900 text-3xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full">
-                      AI Match: {selectedApplicant?.cvAnalysis?.matchPercentage != null ? `${selectedApplicant.cvAnalysis.matchPercentage}%` : "-"}
-                    </span>
-
-                    <span className={`px-4 py-2 rounded-full ${getStatusClass(selectedApplicant.status)}`}>
-                      {selectedApplicant.status || "-"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-8">
-                  <h3 className="text-xl font-bold mb-5">Applicant Information</h3>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium mt-1">{selectedApplicant.applicantEmail || "-"}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">Applicant ID</p>
-                      <p className="font-medium mt-1">{selectedApplicant.applicantId ?? "-"}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">Application ID</p>
-                      <p className="font-medium mt-1">{selectedApplicant.id ?? "-"}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">Date Applied</p>
-                      <p className="font-medium mt-1">{formatDate(selectedApplicant.submittedAt)}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4">Skills</h3>
-
-                    <div className="flex flex-wrap gap-2">
-                      {Array.isArray(selectedApplicant?.cvAnalysis?.matchedSkills) && selectedApplicant.cvAnalysis.matchedSkills.length > 0 ? (
-                        selectedApplicant.cvAnalysis.matchedSkills.map((skill, index) => (
-                          <span
-                            key={`${skill}-${index}`}
-                            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"
-                          >
-                            {skill}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-500">-</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4">CV</h3>
-
-                    <div className="border border-gray-200 rounded-lg p-5 flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{selectedApplicant.applicantName || "Applicant"} CV</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {selectedApplicant.cvUrl || "CV file not available."}
-                        </p>
-                      </div>
-
-                      {selectedApplicant.cvUrl ? (
-                        <a
-  href={selectedApplicant.cvUrl}
-  target="_blank"
-  rel="noreferrer"
-  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
->
-  View CV
-</a>
-                      ) : (
-                        <span className="text-gray-500">-</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4">AI Matching Summary</h3>
-
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="font-semibold">AI Match Score</span>
-                        <span className="text-2xl font-bold text-blue-600">
-                          {selectedApplicant?.cvAnalysis?.matchPercentage != null ? `${selectedApplicant.cvAnalysis.matchPercentage}%` : "-"}
-                        </span>
-                      </div>
-
-                      <p className="text-gray-600 leading-7">
-                        {selectedApplicant?.cvAnalysis?.aiEvaluationSummary || "No AI evaluation summary available."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4">Recruitment Notes</h3>
-
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
-                      <p className="text-gray-600 leading-7">
-                        {selectedApplicant?.cvAnalysis?.recommendation || "No recommendation available."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t p-6 flex justify-end">
-                  <button
-                    onClick={() => setSelectedApplicant(null)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ApplicantDetailsModal
+              applicant={selectedApplicant}
+              onClose={() => setSelectedApplicant(null)}
+            />
           )}
         </main>
       </div>

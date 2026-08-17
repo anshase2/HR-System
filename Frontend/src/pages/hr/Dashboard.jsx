@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { getJobs } from "../../services/jobService";
+import { deleteJob, getJobs } from "../../services/jobService";
+import { getDashboardStatistics } from "../../services/dashboardService";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState("Monthly");
@@ -11,45 +12,20 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [jobsError, setJobsError] = useState("");
-
-  const dashboardData = {
-    Today: {
-      jobs: 2,
-      applicants: 8,
-      interviews: 1,
-      hired: 0,
-    },
-
-    "Last 7 Days": {
-      jobs: 9,
-      applicants: 52,
-      interviews: 14,
-      hired: 3,
-    },
-
-    Monthly: {
-      jobs: 24,
-      applicants: 186,
-      interviews: 32,
-      hired: 11,
-    },
-
-    "Last 6 Months": {
-      jobs: 71,
-      applicants: 845,
-      interviews: 164,
-      hired: 42,
-    },
-
-    Yearly: {
-      jobs: 152,
-      applicants: 2134,
-      interviews: 417,
-      hired: 109,
-    },
-  };
-
-  const stats = dashboardData[period];
+  const [stats, setStats] = useState({
+    totalJobs: 0,
+    activeJobs: 0,
+    inactiveJobs: 0,
+    totalApplications: 0,
+    pendingApplications: 0,
+    acceptedApplications: 0,
+    rejectedApplications: 0,
+    totalApplicants: 0,
+    applicationsInPeriod: 0,
+    jobsInPeriod: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -85,12 +61,59 @@ export default function Dashboard() {
       }
     }
 
+    async function loadStats() {
+      setStatsLoading(true);
+      setStatsError("");
+
+      try {
+        const response = await getDashboardStatistics(period);
+
+        if (isMounted) {
+          setStats({
+            totalJobs: Number(response?.totalJobs ?? 0),
+            activeJobs: Number(response?.activeJobs ?? 0),
+            inactiveJobs: Number(response?.inactiveJobs ?? 0),
+            totalApplications: Number(response?.totalApplications ?? 0),
+            pendingApplications: Number(response?.pendingApplications ?? 0),
+            acceptedApplications: Number(response?.acceptedApplications ?? 0),
+            rejectedApplications: Number(response?.rejectedApplications ?? 0),
+            totalApplicants: Number(response?.totalApplicants ?? 0),
+            applicationsInPeriod: Number(response?.applicationsInPeriod ?? 0),
+            jobsInPeriod: Number(response?.jobsInPeriod ?? 0),
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard statistics:", error);
+
+        if (isMounted) {
+          setStats({
+            totalJobs: 0,
+            activeJobs: 0,
+            inactiveJobs: 0,
+            totalApplications: 0,
+            pendingApplications: 0,
+            acceptedApplications: 0,
+            rejectedApplications: 0,
+            totalApplicants: 0,
+            applicationsInPeriod: 0,
+            jobsInPeriod: 0,
+          });
+          setStatsError("Failed to load dashboard statistics.");
+        }
+      } finally {
+        if (isMounted) {
+          setStatsLoading(false);
+        }
+      }
+    }
+
     loadJobs();
+    loadStats();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [period]);
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -214,7 +237,7 @@ export default function Dashboard() {
       className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="Today">Today</option>
-      <option value="Last 7 Days">Last 7 Days</option>
+      <option value="Weekly">Weekly</option>
       <option value="Monthly">Monthly</option>
       <option value="Last 6 Months">Last 6 Months</option>
       <option value="Yearly">Yearly</option>
@@ -224,51 +247,57 @@ export default function Dashboard() {
 
 </div>
 
+          {statsError ? (
+            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+              {statsError}
+            </div>
+          ) : null}
+
           {/* Statistics */}
 
           <div className="grid grid-cols-4 gap-6 mt-10">
 
             <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-gray-500 text-sm">Open jobs</h3>
+              <h3 className="text-gray-500 text-sm">Total Jobs</h3>
               <p className="text-3xl font-bold mt-2">
-  {stats.jobs}
-</p>
+                {statsLoading ? "..." : stats.totalJobs}
+              </p>
               <p className="text-green-500 text-sm mt-2">
-                +4 This Month
+                {stats.jobsInPeriod} in selected period
               </p>
             </div>
 
             <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-gray-500 text-sm">Active Applicants</h3>
+              <h3 className="text-gray-500 text-sm">Active Jobs</h3>
               <p className="text-3xl font-bold mt-2">
-  {stats.applicants}
-</p>
+                {statsLoading ? "..." : stats.activeJobs}
+              </p>
               <p className="text-green-500 text-sm mt-2">
-                +18 This Week
+                {stats.inactiveJobs} inactive
               </p>
             </div>
 
             <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-gray-500 text-sm">Interviews</h3>
+              <h3 className="text-gray-500 text-sm">Total Applications</h3>
               <p className="text-3xl font-bold mt-2">
-  {stats.interviews}
-</p>
+                {statsLoading ? "..." : stats.totalApplications}
+              </p>
               <p className="text-blue-500 text-sm mt-2">
-                8 Scheduled
+                {stats.pendingApplications} pending
               </p>
             </div>
 
             <div className="bg-white rounded-xl shadow p-6">
               <h3 className="text-gray-500 text-sm">
-                Successful Hires
+                Total Applicants
               </h3>
 
               <p className="text-3xl font-bold mt-2">
-  {stats.hired}
-</p>
+                {statsLoading ? "..." : stats.totalApplicants}
+              </p>
 
               <p className="text-green-500 text-sm mt-2">
-                3 This Month
+                {stats.acceptedApplications} accepted
               </p>
 
             </div>
@@ -408,13 +437,25 @@ export default function Dashboard() {
                           </button>
 
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               const confirmed = window.confirm(
                                 `Are you sure you want to delete "${job.title}"?`
                               );
 
-                              if (confirmed) {
+                              if (!confirmed) {
+                                return;
+                              }
+
+                              try {
+                                await deleteJob(job.id);
                                 setJobs((prevJobs) => prevJobs.filter((item) => item.id !== job.id));
+
+                                if (selectedJob && selectedJob.id === job.id) {
+                                  setSelectedJob(null);
+                                }
+                              } catch (error) {
+                                console.error("Failed to delete job:", error);
+                                alert(error?.message || "Failed to delete job. Please try again.");
                               }
                             }}
                             className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"

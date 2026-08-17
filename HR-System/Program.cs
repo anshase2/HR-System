@@ -28,6 +28,7 @@ builder.Services.AddTransient<HR.BLL.Interfaces.IOtpService, HR.BLL.Services.Otp
 builder.Services.AddTransient<HR.BLL.Interfaces.IEmailService, HR.BLL.Services.EmailService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IAIService, AIService>();
 
@@ -139,7 +140,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5174")
+            .WithOrigins("http://localhost:5175")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

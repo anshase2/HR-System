@@ -36,15 +36,23 @@ function AppRouter() {
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/profile" element={<Profile />} />
-       <Route
-         path="/apply/:id"
-         element={
-           <ProtectedRoute roles={["Applicant"]}>
-             <ApplicationForm />
-           </ProtectedRoute>
-         }
-       />
-       <Route path="/about" element={<About />} />
+        <Route
+          path="/application/:jobId"
+          element={
+            <ProtectedRoute roles={["Applicant"]}>
+              <ApplicationForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/apply/:id"
+          element={
+            <ProtectedRoute roles={["Applicant"]}>
+              <ApplicationForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/about" element={<About />} />
         
 
         {/* Authentication */}

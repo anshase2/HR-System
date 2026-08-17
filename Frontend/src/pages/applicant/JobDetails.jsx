@@ -218,8 +218,7 @@ export default function JobDetails() {
           <button
             type="button"
             className="mt-6 bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700"
-            disabled
-            title="Application flow will be implemented in a later phase"
+            onClick={() => navigate(`/application/${id}`)}
           >
             Apply Now
           </button>

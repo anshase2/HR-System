@@ -20,7 +20,12 @@ namespace HR.DAL.Repositories
         {
             return await _db.Applicants.Include(a => a.User).FirstOrDefaultAsync(a => a.UserId == userId);
         }
-
+        public async Task<List<Applicant>> GetAllWithUserAsync()
+        {
+            return await _db.Applicants
+                .Include(a => a.User)
+                .ToListAsync();
+        }
 
     }
 }

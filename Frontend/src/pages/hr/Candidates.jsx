@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getApplicationsByJob } from "../../services/applicationService";
+import ApplicantDetailsModal from "../../components/applicant/ApplicantDetailsModal";
+import {
+  getApplicationById,
+  getApplicationsByJob,
+} from "../../services/applicationService";
 import { getActiveJobs } from "../../services/jobService";
 
 const getAiScore = (application) => {
@@ -52,8 +56,37 @@ export default function Candidates() {
   const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [applicationsError, setApplicationsError] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [selectedCandidateLoading, setSelectedCandidateLoading] = useState(false);
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId) || null;
+
+  const handleCandidateStatusUpdated = (applicationId, status) => {
+    setApplications((prev) =>
+      prev.map((application) =>
+        application.id === applicationId ? { ...application, status } : application
+      )
+    );
+
+    setSelectedCandidate((prev) =>
+      prev?.id === applicationId ? { ...prev, status } : prev
+    );
+  };
+
+  const handleViewCandidate = async (application) => {
+    if (!application?.id) return;
+
+    setSelectedCandidateLoading(true);
+
+    try {
+      const fullApplication = await getApplicationById(application.id);
+      setSelectedCandidate(fullApplication);
+    } catch (error) {
+      console.error("Failed to load candidate details:", error);
+      setSelectedCandidate(application);
+    } finally {
+      setSelectedCandidateLoading(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -276,10 +309,11 @@ export default function Candidates() {
                         </td>
                         <td className="p-4">
                           <button
-                            onClick={() => setSelectedCandidate(application)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            onClick={() => handleViewCandidate(application)}
+                            disabled={selectedCandidateLoading}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
                           >
-                            View Details
+                            {selectedCandidateLoading ? "Loading..." : "View Details"}
                           </button>
                         </td>
                       </tr>
@@ -291,106 +325,12 @@ export default function Candidates() {
           </div>
 
           {selectedCandidate && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                <div className="p-8 border-b">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-3xl font-bold text-gray-900">
-                        {selectedCandidate.applicantName || "Candidate"}
-                      </h2>
-                      <p className="text-gray-500 mt-2">
-                        {selectedCandidate.jobName || selectedCandidate.jobTitle || selectedJob?.title || "-"}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setSelectedCandidate(null)}
-                      className="text-gray-400 hover:text-gray-900 text-3xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <span className={`px-4 py-2 rounded-full ${getStatusClass(selectedCandidate.status)}`}>
-                      {selectedCandidate.status || "-"}
-                    </span>
-
-                    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full">
-                      AI Match: {getAiScore(selectedCandidate) != null ? `${getAiScore(selectedCandidate)}%` : "-"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-8">
-                  <h3 className="text-xl font-bold mb-5">Candidate Information</h3>
-
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="bg-gray-50 rounded-xl p-5">
-                      <p className="text-gray-500 text-sm">Candidate Name</p>
-                      <p className="text-xl font-bold mt-2">
-                        {selectedCandidate.applicantName || "-"}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-xl p-5">
-                      <p className="text-gray-500 text-sm">Job</p>
-                      <p className="text-xl font-bold mt-2">
-                        {selectedCandidate.jobName || selectedCandidate.jobTitle || selectedJob?.title || "-"}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-xl p-5">
-                      <p className="text-gray-500 text-sm">AI Match / General Score</p>
-                      <p className="text-xl font-bold mt-2">
-                        {getAiScore(selectedCandidate) != null ? `${getAiScore(selectedCandidate)}%` : "-"}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-xl p-5">
-                      <p className="text-gray-500 text-sm">Application Status</p>
-                      <p className="text-xl font-bold mt-2">
-                        {selectedCandidate.status || "-"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 bg-blue-50 rounded-xl p-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold">Overall AI Match</h3>
-                        <p className="text-gray-500 text-sm mt-1">
-                          General score generated by the recruitment engine.
-                        </p>
-                      </div>
-
-                      <span className="text-4xl font-bold text-blue-600">
-                        {getAiScore(selectedCandidate) != null ? `${getAiScore(selectedCandidate)}%` : "-"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-3">AI Recommendation</h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
-                      <p className="text-gray-600 leading-7">
-                        {getRecommendation(getAiScore(selectedCandidate))}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t p-6 flex justify-end">
-                  <button
-                    onClick={() => setSelectedCandidate(null)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ApplicantDetailsModal
+              applicant={selectedCandidate}
+              onClose={() => setSelectedCandidate(null)}
+              showStatusActions={true}
+              onStatusUpdated={handleCandidateStatusUpdated}
+            />
           )}
         </main>
       </div>

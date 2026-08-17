@@ -6,5 +6,6 @@ namespace HR.DAL.IRepositories
     public interface IApplicantRepository : IGenericRepository<Applicant>
     {
         Task<Applicant?> GetByUserIdAsync(System.Guid userId);
+        Task<List<Applicant>> GetAllWithUserAsync();
     }
 }
