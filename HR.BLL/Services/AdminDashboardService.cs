@@ -30,11 +30,16 @@ namespace HR.BLL.Services
 
         public async Task<AdminDashboardStatisticsDTO> GetStatisticsAsync(string period)
         {
+            var normalizedPeriod = string.IsNullOrWhiteSpace(period)
+     ? "Monthly"
+     : period.Trim();
+
             var now = DateTime.UtcNow;
 
             DateTime startDate;
+            DateTime endDate = now;
 
-            switch (period.ToLower())
+            switch (normalizedPeriod.ToLowerInvariant())
             {
                 case "today":
                     startDate = now.Date;
@@ -45,21 +50,44 @@ namespace HR.BLL.Services
                     break;
 
                 case "monthly":
-                    startDate = new DateTime(now.Year, now.Month, 1);
+                    startDate = new DateTime(
+                        now.Year,
+                        now.Month,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc);
                     break;
 
                 case "last 6 months":
-                    startDate = now.AddMonths(-6);
+                    startDate = new DateTime(
+                        now.Year,
+                        now.Month,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc).AddMonths(-6);
                     break;
 
                 case "yearly":
-                    startDate = new DateTime(now.Year, 1, 1);
+                    startDate = new DateTime(
+                        now.Year,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc);
                     break;
 
                 default:
                     throw new ArgumentException(
                         "Invalid period. Use Today, Weekly, Monthly, Last 6 Months, or Yearly.");
             }
+        
+
             // Get data through repositories
             var jobs = await _jobRepository.GetAllAsync();
             var applications = await _applicationRepository.GetAllAsync();
@@ -68,18 +96,18 @@ namespace HR.BLL.Services
             // Filter data based on selected period
             var filteredJobs = jobs.Where(j =>
                 j.PostedDate >= startDate &&
-                j.PostedDate <= now);
+                j.PostedDate <= endDate);
 
             var filteredApplications = applications.Where(a =>
                 a.SubmittedAt >= startDate &&
-                a.SubmittedAt <= now);
+                a.SubmittedAt <= endDate);
 
             var startDateOnly = DateOnly.FromDateTime(startDate);
-            var nowDateOnly = DateOnly.FromDateTime(now);
+            var endDateOnly = DateOnly.FromDateTime(endDate);
 
             var filteredApplicants = applicants.Where(a =>
                 a.User.CreatedAt >= startDateOnly &&
-                a.User.CreatedAt <= nowDateOnly);
+                a.User.CreatedAt <= endDateOnly);
 
 
             // Jobs statistics

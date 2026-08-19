@@ -26,13 +26,14 @@ namespace HR.BLL.Services
         private readonly IFileService _fileService;
         private readonly ICVAnalysisService _cvAnalysisService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IEmailService _emailService;
 
         public ApplicationService(HR.DAL.IRepositories.IApplicationRepository applicationRepository,
             HR.DAL.IRepositories.IApplicantRepository applicantRepository,
             HR.DAL.IRepositories.IJobRepository jobRepository,
             UserManager<ApplicationUser> userManager,
             IFileService fileService,
-            ICVAnalysisService cvAnalysisService,IHttpContextAccessor httpContextAccessor)
+            ICVAnalysisService cvAnalysisService,IHttpContextAccessor httpContextAccessor, IEmailService emailService)
         {
             _applicationRepository = applicationRepository;
             _applicantRepository = applicantRepository;
@@ -41,6 +42,7 @@ namespace HR.BLL.Services
             _httpContextAccessor = httpContextAccessor;
             _cvAnalysisService = cvAnalysisService;
             _fileService = fileService;
+            _emailService = emailService;
         }
 
         public async Task<ApplicationResponseForApplicantDTO> ApplyAsync(CreateApplicationDTO dto, Guid userID)
@@ -130,13 +132,80 @@ namespace HR.BLL.Services
         }
 
 
+        /*  public async Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status)
+          {
+              var app = await _applicationRepository.GetByIdAsync(applicationId);
+              if (app == null) return false;
+              app.Status = status;
+              _applicationRepository.Update(app);
+              await _applicationRepository.SaveChangesAsync();
+              return true;
+          }*/
         public async Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status)
         {
-            var app = await _applicationRepository.GetByIdAsync(applicationId);
-            if (app == null) return false;
+            var app = await _applicationRepository.GetApplicationByIdAsync(applicationId);
+
+            if (app == null)
+                return false;
+
             app.Status = status;
+
             _applicationRepository.Update(app);
             await _applicationRepository.SaveChangesAsync();
+
+            if (status == ApplicationStatus.Accepted)
+            {
+                var applicant = await _applicantRepository
+                    .GetByUserIdAsync(app.Applicant.UserId);
+
+                if (applicant != null)
+                {
+                    var user = await _userManager
+                        .FindByIdAsync(applicant.UserId.ToString());
+
+                    if (user != null && !string.IsNullOrEmpty(user.Email))
+                    {
+                        var subject = "Application Accepted";
+
+                        var body = $"""
+                    <h2>Congratulations {user.FirstName}!</h2>
+
+                    <p>
+                        We are pleased to inform you that your application
+                        for the position
+                        <strong>{app.Job.Title}</strong>
+                        has been accepted.
+                    </p>
+
+                    <p>
+                        Our team will contact you with the next steps.
+                    </p>
+
+                    <br/>
+
+                    <p>
+                        Best regards,<br/>
+                        HR Team
+                    </p>
+                    """;
+
+                        try
+                        {
+                            await _emailService.SendEmailAsync(
+                                user.Email,
+                                subject,
+                                body
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error sending acceptance email:");
+                            Console.WriteLine(ex.ToString());
+                        }
+                    }
+                }
+            }
+
             return true;
         }
 

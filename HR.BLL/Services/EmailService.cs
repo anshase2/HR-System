@@ -1,8 +1,12 @@
+using DocumentFormat.OpenXml.Vml;
 using HR.BLL.Interfaces;
 using Microsoft.Extensions.Configuration;
-using System.Net.Mail;
 using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace HR.BLL.Services
 {
@@ -15,32 +19,67 @@ namespace HR.BLL.Services
             _config = config;
         }
 
+       
         public async Task SendEmailAsync(string to, string subject, string body)
         {
             var section = _config.GetSection("EmailSettings");
-            var host = section["Host"];
-            var port = int.Parse(section["Port"] ?? "587");
+
+            var host = section["Host"] ?? "smtp.gmail.com";
+            var port = int.Parse(section["Port"] ?? "465");
             var username = section["Username"];
             var password = section["Password"];
             var from = section["FromEmail"] ?? username;
             var displayName = section["FromName"] ?? "HR System";
 
-            using var client = new SmtpClient(host, port)
+            var message = new MimeMessage();
+
+            message.From.Add(
+                new MailboxAddress(displayName, from)
+            );
+
+            message.To.Add(
+                new MailboxAddress("", to)
+            );
+
+            message.Subject = subject;
+
+            message.Body = new TextPart("html")
             {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(username, password)
+                Text = body
             };
 
-            var mail = new MailMessage()
-            {
-                From = new MailAddress(from, displayName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-            mail.To.Add(to);
+            using var client = new MailKit.Net.Smtp.SmtpClient();
 
-            await client.SendMailAsync(mail);
+            try
+            {
+         
+
+                await client.ConnectAsync(
+                    host,
+                    port,
+                    SecureSocketOptions.SslOnConnect
+                );
+
+
+                await client.AuthenticateAsync(
+                    username,
+                    password
+                );
+
+
+                await client.SendAsync(message);
+
+
+                await client.DisconnectAsync(true);
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("SMTP ERROR:");
+                Console.WriteLine(ex.ToString());
+
+                throw;
+            }
         }
     }
 }

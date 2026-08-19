@@ -22,8 +22,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IApplicationService, ApplicationService>();
-
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddTransient<IEmployeeService, EmployeeService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
+
 builder.Services.AddTransient<HR.BLL.Interfaces.IOtpService, HR.BLL.Services.OtpService>();
 builder.Services.AddTransient<HR.BLL.Interfaces.IEmailService, HR.BLL.Services.EmailService>();
 builder.Services.AddScoped<IFileService, FileService>();
@@ -104,7 +106,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options => {
  options.Password.RequiredLength = 5;
  options.Password.RequireNonAlphanumeric = false;
@@ -140,7 +141,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5175")
+            .WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
