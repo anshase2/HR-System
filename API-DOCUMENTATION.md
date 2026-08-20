@@ -13,8 +13,13 @@ This document describes the **HR System ASP.NET Core Web API**. The API supports
 | Authentication & Accounts | Login, applicant registration, employee/admin creation, logout, email verification endpoints |
 | Jobs | List, filter, create, update, and delete job postings |
 | Applications | Apply to jobs (with CV), list/filter applications, update status, delete |
+| Employee Administration | Admin-only employee listing, lookup, and deletion |
+| Admin Dashboard | Admin-only aggregate hiring statistics for a selected period |
 | Documents | Extract text from uploaded CV files (PDF / DOCX) |
 | Gemini Test | Simple test endpoint that calls the configured Gemini model |
+| Email Test | Declared development utility intended to send a test email (currently does not compile) |
+
+> **Current build status:** `dotnet build HR-System.sln --no-restore` fails. `EmailTestController` calls a missing `EmailService.TestEmailAsync` method, and `EmployeeService` is registered as `IEmployeeService` without implementing that interface. The routes below reflect the controller source, but no API endpoint can be served until these compilation errors are fixed.
 
 ---
 
@@ -96,9 +101,9 @@ A default **Admin** user is seeded on application startup (see `Seeder.cs` in th
 
 | Requirement | Endpoints |
 |---|---|
-| Not required (`[AllowAnonymous]` or no `[Authorize]`) | Login, register applicant, verify email, resend verification, list jobs, active jobs, get job by id, document extract, Gemini test |
+| Not required (`[AllowAnonymous]` or no `[Authorize]`) | Login, register applicant, verify email, resend verification, list jobs, active jobs, get job by id, document extract, Gemini test, email test |
 | Any authenticated user (`[Authorize]`) | Logout, get application by id |
-| Admin only | Create employee |
+| Admin only | Create employee; list, get, and delete employees; get dashboard statistics |
 | Admin or Employee | Create/update/delete jobs; list applications; applications by job; update application status; delete application |
 | Applicant only | Apply to job; get my applications |
 
@@ -831,7 +836,8 @@ None.
     "postedDate": "2026-08-01T09:00:00Z",
     "closingDate": "2026-09-01T00:00:00Z",
     "isActive": true,
-    "createdById": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    "createdById": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "numberOfApplications": 4
   }
 ]
 ```
@@ -854,6 +860,7 @@ None.
 | closingDate | datetime | Yes | Closing date |
 | isActive | bool | No | Active flag |
 | createdById | string | No | Creator user id (GUID as string) |
+| numberOfApplications | int | Yes | Number of applications for this job. It is populated by `GET /api/Jobs`; other job endpoints currently serialize it as `null`. |
 
 ---
 
@@ -1334,7 +1341,7 @@ None.
     "applicantName": "Sara Ahmad",
     "submittedAt": "2026-08-11T12:00:00Z",
     "status": "Pending",
-    "cvUrl": "C:\\\\path\\\\to\\\\wwwroot\\\\uploads\\\\cvs\\\\guid.pdf",
+    "cvUrl": "https://localhost:7256/uploads/cvs/guid.pdf",
     "coverLetter": "I am excited to apply...",
     "cvAnalysis": {
       "id": 1,
@@ -1359,7 +1366,7 @@ None.
 | applicantName | string | No | Full name |
 | submittedAt | datetime | No | Submitted at |
 | status | string | Yes | Status name |
-| cvUrl | string | Yes | Stored CV path |
+| cvUrl | string | Yes | Absolute URL constructed from the current request scheme and host, pointing to the generated file under `/uploads/cvs/`. |
 | coverLetter | string | Yes | Cover letter |
 | cvAnalysis | object | Yes | AI analysis (`CVAnalysisDTO`) |
 | cvAnalysis.id | int | No | Analysis id |
@@ -1665,6 +1672,212 @@ None.
 
 ---
 
+# Employee Administration
+
+All endpoints in this section are protected by the controller-level `[Authorize(Roles = "Admin")]` attribute.
+
+> **Availability:** These routes are declared in `EmployeeController`, but the current solution does not compile because `EmployeeService` does not declare `IEmployeeService` as an implemented interface while `Program.cs` registers it as one. The documented responses describe the controller/service behavior once that build error is corrected.
+
+## Get All Employees
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Employee`
+
+### Authentication and Role
+
+Required — `Admin`
+
+### Parameters and Request Body
+
+No path parameters, query parameters, or request body.
+
+### Success Response
+
+**Status:** `200 OK`
+
+Returns only Identity users in the `Employee` role:
+
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "email": "layla.hr@example.com",
+    "role": "",
+    "firstName": "Layla",
+    "lastName": "Hassan",
+    "createdAt": "2026-08-11"
+  }
+]
+```
+
+The response uses `EmployeeDTO`: `id` (GUID), `email`, `role`, `firstName`, `lastName`, and `createdAt` (`DateOnly`). The current service does not assign `role`, so it is returned as an empty string even though every item is an Employee.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Missing/invalid token or caller is not Admin |
+
+---
+
+## Get Employee By Id
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Employee/{id}`
+
+### Authentication and Role
+
+Required — `Admin`
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | guid string | Yes | Identity user id of the Employee |
+
+### Query Parameters and Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+Returns one `EmployeeDTO` in the shape shown for Get All Employees.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Missing/invalid token or caller is not Admin |
+| 404 | No Identity user exists for `id`, or the user does not have the `Employee` role. Body: `{ "message": "Employee not found." }` |
+
+---
+
+## Delete Employee
+
+### HTTP Method
+
+`DELETE`
+
+### URL
+
+`/api/Employee/{id}`
+
+### Authentication and Role
+
+Required — `Admin`
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| id | guid string | Yes | Identity user id of the Employee to delete |
+
+### Query Parameters and Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "message": "Employee deleted successfully."
+}
+```
+
+Only users in the `Employee` role can be deleted through this endpoint; Admin and Applicant accounts are treated as not found.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 / 403 | Missing/invalid token or caller is not Admin |
+| 404 | User does not exist or does not have the `Employee` role. Body: `{ "message": "Employee not found." }` |
+
+---
+
+# Admin Dashboard
+
+> **Availability:** This controller and its contract are implemented in source, but the API project currently cannot start because of the build errors noted in the overview.
+
+## Get Dashboard Statistics
+
+### Purpose
+
+Return aggregate jobs, applications, and applicants created during the selected UTC date period.
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Admin/Dashboard/statistics`
+
+### Authentication and Role
+
+Required — `Admin`
+
+### Query Parameters
+
+| Parameter | Type | Required | Description | Default |
+|---|---|---|---|---|
+| period | string | No | Case-insensitive: `Today`, `Weekly`, `Monthly`, `Last 6 Months`, or `Yearly` | `Monthly` |
+
+Example:
+
+```http
+GET /api/Admin/Dashboard/statistics?period=Weekly
+```
+
+### Request Body
+
+None.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "period": "Weekly",
+  "totalJobs": 4,
+  "activeJobs": 3,
+  "inactiveJobs": 1,
+  "totalApplications": 12,
+  "pendingApplications": 7,
+  "acceptedApplications": 3,
+  "rejectedApplications": 2,
+  "totalApplicants": 9,
+  "applicationsInPeriod": 0,
+  "jobsInPeriod": 0
+}
+```
+
+Response DTO: `AdminDashboardStatisticsDTO`. `applicationsInPeriod` and `jobsInPeriod` are present in the DTO but are not set by the current service, so they serialize as `0`.
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 400 | Unsupported `period`. The response is `{ "message": "Invalid period. Use Today, Weekly, Monthly, Last 6 Months, or Yearly." }` |
+| 401 / 403 | Missing/invalid token or caller is not Admin |
+
+---
+
 # Documents / CV Text Extraction
 
 ## Extract Text From Document
@@ -1798,6 +2011,48 @@ Body is the **raw string** returned from Gemini (JSON text from Google’s API),
 
 ---
 
+# Email Test
+
+## Send Test Email
+
+### Purpose
+
+Controller-declared development utility intended to call `EmailService.TestEmailAsync`.
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/EmailTest`
+
+### Authentication
+
+Not Required (no `[Authorize]`)
+
+### Required Role
+
+None
+
+### Parameters and Request Body
+
+No path parameters, query parameters, or request body.
+
+### Success Response
+
+**Intended status:** `200 OK`
+
+```json
+"Email test completed."
+```
+
+### Error Responses
+
+This route is **not currently callable**: `EmailService` has no `TestEmailAsync` member, so `EmailTestController` causes a compile-time error. If that method is added, the controller would return the body shown above; unhandled configuration, SMTP, or email-service exceptions would result in a `500 Internal Server Error`.
+
+---
+
 # 8. Quick Reference Table
 
 | Method | URL | Auth | Roles |
@@ -1821,8 +2076,13 @@ Body is the **raw string** returned from Gemini (JSON text from Google’s API),
 | GET | `/api/Application/me` | Yes | Applicant |
 | PUT | `/api/Application/{id}/status` | Yes | Admin, Employee |
 | DELETE | `/api/Application/{id}` | Yes | Admin, Employee |
+| GET | `/api/Employee` | Yes | Admin |
+| GET | `/api/Employee/{id}` | Yes | Admin |
+| DELETE | `/api/Employee/{id}` | Yes | Admin |
+| GET | `/api/Admin/Dashboard/statistics?period={period}` | Yes | Admin |
 | POST | `/api/Document/extract` | No | — |
 | POST | `/api/GeminiTest/test` | No | — |
+| GET | `/api/EmailTest` | No | — |
 
 ---
 
@@ -1855,7 +2115,7 @@ These are behaviors observed in the current code that frontend developers should
 3. **`country` is required** on register/create-employee DTOs but is **not saved** by the auth service.
 4. **Job request `requiredSkills`** is a comma-separated **string**; job responses return a **string array**.
 5. **Apply** returns the smaller `ApplicationResponseForApplicantDTO`, not the HR `ApplicationResponseDTO`.
-6. **No CORS configuration** is registered in `Program.cs`. Browser clients on another origin may need backend CORS enabled.
+6. **CORS is restricted to the Vite development origin** `http://localhost:5173` (`AllowFrontend` policy). Other browser origins are not allowed by the current configuration.
 7. **JWT `NameIdentifier` claim is set to email** in `JwtService`, while `sub` is the user GUID. Controllers prefer `sub` for user id — keep using tokens issued by this API.
 8. Secrets (JWT signing key, connection strings, Gemini API key) live in server configuration and must **never** be embedded in the frontend.
 
