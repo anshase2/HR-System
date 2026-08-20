@@ -19,8 +19,7 @@ export default function CreateJob() {
 
       setIsOpen(false);
 
-      // ارجع إلى صفحة الوظائف بعد نجاح الإنشاء
-      navigate("/jobs");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Create job error:", error);
 

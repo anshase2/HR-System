@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { deleteJob, getJobs } from "../../services/jobService";
 import { getDashboardStatistics } from "../../services/dashboardService";
+import { useAuth } from "../../hooks/useAuth.jsx";
 
 export default function Dashboard() {
+  const { authUser } = useAuth();
   const [period, setPeriod] = useState("Monthly");
   const [jobSearch, setJobSearch] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -196,6 +198,15 @@ export default function Dashboard() {
 >
   Applicants
 </button>
+
+            {authUser?.role === "Admin" && (
+              <button
+                onClick={() => navigate("/employees")}
+                className="block w-full text-left p-3 rounded-lg hover:bg-gray-100"
+              >
+                Employees
+              </button>
+            )}
 
             <button  onClick={() => navigate("/candidates")}
             className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">

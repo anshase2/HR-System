@@ -17,6 +17,7 @@ using HR.DAL.DatabaseContext;
 using System.Threading.Tasks;
 using HR.BLL.DTOs.Auth;
 using HR.DAL.enums;
+using Microsoft.Extensions.Configuration;
 
 
 
@@ -33,6 +34,7 @@ namespace HR.BLL.Services
         private readonly HR.BLL.Interfaces.IOtpService _otpService;
         private readonly HR.BLL.Interfaces.IEmailService _emailService;
         private readonly HR.DAL.IRepositories.IEmailOtpRepository _emailOtpRepository;
+        private readonly IConfiguration _configuration;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
@@ -42,7 +44,8 @@ namespace HR.BLL.Services
             ApplicationDbContext context,
             HR.BLL.Interfaces.IOtpService otpService,
             HR.BLL.Interfaces.IEmailService emailService,
-            HR.DAL.IRepositories.IEmailOtpRepository emailOtpRepository)
+            HR.DAL.IRepositories.IEmailOtpRepository emailOtpRepository,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -52,6 +55,7 @@ namespace HR.BLL.Services
             _otpService = otpService;
             _emailService = emailService;
             _emailOtpRepository = emailOtpRepository;
+            _configuration = configuration;
         }
 
         public async Task<RegisterApplicantResponseDTO> RegisterApplicantAsync(RegisterApplicantDTO registerDto)
@@ -112,14 +116,33 @@ namespace HR.BLL.Services
        
         public async Task<CreateEmplyeeResponseDTO> CreateEmployeeAsync(CreateEmplyeeRequestDTO registerDto)
         {
-            if(registerDto.Role!= UserRoles.Admin && registerDto.Role != UserRoles.Employee)
+            var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
+            var passwordSetupPath = _configuration["Frontend:EmployeePasswordSetupPath"];
+
+            if (string.IsNullOrWhiteSpace(frontendBaseUrl) || string.IsNullOrWhiteSpace(passwordSetupPath))
             {
                 return new CreateEmplyeeResponseDTO
                 {
-                    Message = "Invalid role specified",
-                    Errors = new List<string> { "Role must be Admin, HR, or Manager" }
+                    Message = "Employee password setup is not configured.",
+                    Errors = new List<string> { "Missing Frontend password setup configuration." }
                 };
             }
+            var existingEmployee = await _userManager.FindByEmailAsync(registerDto.Email);
+
+            if (existingEmployee != null &&
+                await _userManager.IsInRoleAsync(existingEmployee, UserRoles.Employee))
+            {
+                return new CreateEmplyeeResponseDTO
+                {
+                    Message = "Employee already exists.",
+                    Errors = new List<string>
+        {
+            "An employee with this email already exists."
+        }
+                };
+            }
+
+
             ApplicationUser user = new ApplicationUser()
             {
                 
@@ -131,8 +154,7 @@ namespace HR.BLL.Services
                 CreatedAt = DateOnly.FromDateTime(DateTime.Now)
             };
 
-
-            IdentityResult result = await _userManager.CreateAsync(user, registerDto.Password);
+            IdentityResult result = await _userManager.CreateAsync(user);
 
 
             if (!result.Succeeded)
@@ -144,17 +166,91 @@ namespace HR.BLL.Services
                 };
             }
 
-            await _userManager.AddToRoleAsync(user, registerDto.Role);
+            var roleResult = await _userManager.AddToRoleAsync(user, UserRoles.Employee);
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user);
+
+                return new CreateEmplyeeResponseDTO
+                {
+                    Message = "Employee role assignment failed",
+                    Errors = roleResult.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+            var passwordSetupToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var setupLink = BuildEmployeePasswordSetupLink(
+                frontendBaseUrl,
+                passwordSetupPath,
+                user.Email!,
+                passwordSetupToken);
+
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    user.Email!,
+                    "Set up your HR System password",
+                    $"""
+                    <h2>Welcome to the HR System</h2>
+                    <p>An administrator has created your employee account.</p>
+                    <p>Please set your password by opening the link below:</p>
+                    <p><a href="{setupLink}">Set up your password</a></p>
+                    <p>If you did not expect this email, please contact your administrator.</p>
+                    """);
+            }
+            catch (Exception)
+            {
+                return new CreateEmplyeeResponseDTO
+                {
+                    Id = user.Id,
+                    Email = user.Email!,
+                    Role = UserRoles.Employee,
+                    FirstName = user.FirstName!,
+                    LastName = user.LastName!,
+                    Message = "Employee account was created, but the password setup email could not be sent.",
+                    Errors = new List<string> { "Password setup email delivery failed." }
+                };
+            }
 
             return new CreateEmplyeeResponseDTO
             {
                 Id = user.Id,
                 Email = user.Email,
-                Role = registerDto.Role,
+                Role = UserRoles.Employee,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Message = "User registered successfully",
+                Message = "Employee account created. A password setup link has been sent by email.",
                 Errors = null
+            };
+        }
+
+        public async Task<SetPasswordResponseDTO> SetPasswordAsync(SetPasswordDTO dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                return new SetPasswordResponseDTO
+                {
+                    UserNotFound = true,
+                    Message = "User not found.",
+                    Errors = new List<string> { "User not found." }
+                };
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.Password);
+            if (!result.Succeeded)
+            {
+                return new SetPasswordResponseDTO
+                {
+                    Message = "Password could not be set.",
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+            return new SetPasswordResponseDTO
+            {
+                Succeeded = true,
+                Message = "Password set successfully. You can now log in."
             };
         }
         public async Task<LoginResponseDTO?> LoginAsync(LoginDTO loginDTO)
@@ -216,6 +312,15 @@ namespace HR.BLL.Services
         public Task<bool> ResendVerificationAsync(string email)
         {
             throw new NotImplementedException();
+        }
+
+        private static string BuildEmployeePasswordSetupLink(
+            string frontendBaseUrl,
+            string passwordSetupPath,
+            string email,
+            string token)
+        {
+            return $"{frontendBaseUrl.TrimEnd('/')}/{passwordSetupPath.TrimStart('/')}?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
         }
     }
 }

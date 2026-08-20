@@ -68,6 +68,25 @@ namespace HR_System.Controllers
 
             return response;
         }
+
+        [AllowAnonymous]
+        [HttpPost("set-password")]
+        public async Task<IActionResult> PostSetPassword(SetPasswordDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var response = await _authService.SetPasswordAsync(dto);
+
+            if (response.UserNotFound)
+                return NotFound(new { message = response.Message });
+
+            if (!response.Succeeded)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
         /// <summary>
         ///  Register new applicant       
         /// </summary>

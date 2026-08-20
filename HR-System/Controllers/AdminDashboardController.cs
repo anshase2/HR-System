@@ -1,4 +1,5 @@
-﻿using HR.BLL.DTOs.Admin;
+﻿using HR.BLL.Constants;
+using HR.BLL.DTOs.Admin;
 using HR.BLL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +9,7 @@ namespace HR.API.Controllers
 {
     [ApiController]
     [Route("api/Admin/Dashboard")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = UserRoles.Admin + "," + UserRoles.Employee)]
     public class AdminDashboardController : ControllerBase
     {
         private readonly IAdminDashboardService _adminDashboardService;

@@ -31,5 +31,12 @@ export async function logout() {
   });
 }
 
-export default { login, register, logout };
+export async function setPassword({ email, token, password, confirmPassword }) {
+  return apiRequest("/Account/set-password", {
+    method: "POST",
+    body: { email, token, password, confirmPassword },
+  });
+}
+
+export default { login, register, logout, setPassword };
 

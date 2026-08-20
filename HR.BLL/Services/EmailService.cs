@@ -81,5 +81,19 @@ namespace HR.BLL.Services
                 throw;
             }
         }
+
+        public async Task TestEmailAsync()
+        {
+            var section = _config.GetSection("EmailSettings");
+            var recipient = section["TestRecipient"] ?? section["FromEmail"] ?? section["Username"];
+
+            if (string.IsNullOrWhiteSpace(recipient))
+                throw new InvalidOperationException("Email test recipient is not configured.");
+
+            await SendEmailAsync(
+                recipient,
+                "HR System email test",
+                "<p>This is a test email from the HR System.</p>");
+        }
     }
 }

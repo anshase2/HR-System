@@ -21,20 +21,7 @@ namespace HR.BLL.DTOs.Auth
        // [Remote(action: "IsEmailAlreadyRegister", controller: "Account", ErrorMessage = "Email is already is use")] //soon
         public string PhoneNumber { get; set; } = string.Empty;
 
-
-        [Required(ErrorMessage = "Password can't be blank")]
-        public string Password { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Country can't be blank")]
         public string Country { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Role can't be blank")]
-
-        public string Role { get; set; } = string.Empty;// Admin, Employee
-
-
-
-        [Required(ErrorMessage = "Confirm Password can't be blank")]
-        [Compare("Password", ErrorMessage = "Password and confirm password do not match")]
-        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

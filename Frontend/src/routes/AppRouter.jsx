@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ApplicationForm from "../pages/applicant/ApplicationForm";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import SetPassword from "../pages/auth/SetPassword";
 import EditJob from "../pages/hr/EditJob";
 // Auth
 import Login from "../pages/auth/Login";
@@ -21,6 +22,7 @@ import Analytics from "../pages/hr/Analytics";
 import Candidates from "../pages/hr/Candidates";
 import Settings from "../pages/hr/Settings";
 import CreateJob from "../pages/hr/CreateJob";
+import Employees from "../pages/hr/Employees";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 function AppRouter() {
@@ -62,6 +64,7 @@ function AppRouter() {
   path="/forgot-password"
   element={<ForgotPassword />}
          />
+        <Route path="/set-password" element={<SetPassword />} />
 
 
         {/* HR (Admin or Employee) */}
@@ -118,6 +121,14 @@ function AppRouter() {
           element={
             <ProtectedRoute roles={["Admin", "Employee"]}>
               <CreateJob />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employees"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <Employees />
             </ProtectedRoute>
           }
         />

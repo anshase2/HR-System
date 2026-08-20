@@ -1,5 +1,6 @@
 ﻿using HR.BLL.DTOs.Employee;
 using HR.DAL.Entities.Identity;
+using HR.BLL.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HR.BLL.Services
 {
-    public class EmployeeService
+    public class EmployeeService : IEmployeeService
     {
         private readonly UserManager<ApplicationUser> _userManager;
 
