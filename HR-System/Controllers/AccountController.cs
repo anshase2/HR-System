@@ -94,7 +94,7 @@ namespace HR_System.Controllers
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("register-applicant")]
-        public async Task<ActionResult<ApplicantResponseDTO>> PostRegisterApplicant(RegisterApplicantDTO registerDTO)
+        public async Task<ActionResult<RegisterApplicantResponseDTO>> PostRegisterApplicant(RegisterApplicantDTO registerDTO)
         {
             if (ModelState.IsValid == false)
             {

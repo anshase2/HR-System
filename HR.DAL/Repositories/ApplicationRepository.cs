@@ -46,6 +46,18 @@ namespace HR.DAL.Repositories
                 .Include(a => a.Job)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
+        public async Task<IEnumerable<Application>> GetAcceptedByReviewerAsync(Guid reviewerId)
+        {
+            return await _db.Applications
+                .Include(a => a.Applicant)
+                    .ThenInclude(a => a.User)
+                .Include(a => a.Job)
+                .Include(a => a.CVAnalysis)
+                .Where(a =>
+                    a.Status == ApplicationStatus.Accepted &&
+                    a.ReviewedById == reviewerId)
+                .ToListAsync();
+        }
         public async Task<IEnumerable<Application>> GetAllApplicationsAsync(int? jobId, int? applicantId, ApplicationStatus? status)
         {
             var query = _db.Applications

@@ -23,7 +23,9 @@ namespace HR.BLL.DTOs.Auth
 
 
         [Required(ErrorMessage = "Phone number can't be blank")]
-        [RegularExpression("^[0-9]*$", ErrorMessage = "Phone number should contain digits only")]
+        [RegularExpression(@"^(?:07[789]\d{7}|\+9627[789]\d{7})$",
+    ErrorMessage = "Phone number must be a valid Jordanian mobile number (e.g. 0791234567 or +962791234567).")]
+        //[RegularExpression("^[0-9]*$", ErrorMessage = "Phone number should contain digits only")]
         // [Remote(action: "IsEmailAlreadyRegister", controller: "Account", ErrorMessage = "Email is already is use")] //soon
         public string PhoneNumber { get; set; } = string.Empty;
 

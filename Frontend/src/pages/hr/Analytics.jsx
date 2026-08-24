@@ -1,46 +1,6 @@
 export default function Analytics() {
   return (
-    <div className="min-h-screen bg-gray-100">
-
-      <div className="flex">
-
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-lg p-6">
-
-          <h1 className="text-2xl font-bold text-blue-600">
-            ITG Careers
-          </h1>
-
-          <hr className="my-8" />
-
-          <nav className="space-y-3">
-
-            <button className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
-              Dashboard
-            </button>
-
-            <button className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
-              Vacancies
-            </button>
-
-            <button className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
-              Applicants
-            </button>
-
-            <button className="block w-full text-left p-3 rounded-lg bg-blue-600 text-white">
-              Analytics
-            </button>
-
-            <button className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
-              Settings
-            </button>
-
-          </nav>
-
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 p-10">
+    <>
 
           <h1 className="text-4xl font-bold">
             Recruitment Analytics
@@ -92,10 +52,6 @@ export default function Analytics() {
 
           </div>
 
-        </main>
-
-      </div>
-
-    </div>
+    </>
   );
 }

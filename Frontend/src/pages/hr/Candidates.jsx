@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ApplicantDetailsModal from "../../components/applicant/ApplicantDetailsModal";
 import {
   getApplicationById,
@@ -47,7 +46,6 @@ const getRecommendation = (score) => {
 };
 
 export default function Candidates() {
-  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [jobsError, setJobsError] = useState("");
@@ -197,41 +195,7 @@ export default function Candidates() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="flex">
-        <aside className="w-64 bg-white shadow-lg p-6">
-          <h1 className="text-2xl font-bold text-blue-600">ITG Careers</h1>
-          <hr className="my-8" />
-
-          <nav className="space-y-3">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="block w-full text-left p-3 rounded-lg hover:bg-gray-100"
-            >
-              Dashboard
-            </button>
-
-            <button
-              onClick={() => navigate("/applicants")}
-              className="block w-full text-left p-3 rounded-lg hover:bg-gray-100"
-            >
-              Applicants
-            </button>
-
-            <button className="block w-full text-left p-3 rounded-lg bg-blue-600 text-white">
-              Candidates
-            </button>
-
-            <button
-              onClick={() => navigate("/settings")}
-              className="block w-full text-left p-3 rounded-lg hover:bg-gray-100"
-            >
-              Settings
-            </button>
-          </nav>
-        </aside>
-
-        <main className="flex-1 p-10">
+    <>
           <h1 className="text-4xl font-bold">Candidate Ranking</h1>
 
           <div className="flex items-center gap-4 mt-4">
@@ -332,8 +296,6 @@ export default function Candidates() {
               onStatusUpdated={handleCandidateStatusUpdated}
             />
           )}
-        </main>
-      </div>
-    </div>
+    </>
   );
 }

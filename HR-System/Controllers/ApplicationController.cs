@@ -85,13 +85,20 @@ namespace HR_System.Controllers
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
+            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out Guid userId))
+            {
+                return Unauthorized();
+            }
+            if (string.IsNullOrWhiteSpace(userIdClaim))
+                return Unauthorized();
 
             if (string.IsNullOrWhiteSpace(status))
                 return BadRequest("Status is required.");
             status = status.Trim('"');
             if (!Enum.TryParse<ApplicationStatus>(status, true, out var parsed))
                 return BadRequest($"Invalid status value. Received: [{status}]");
-            var updated = await _applicationService.UpdateStatusAsync(id, parsed);
+            var updated = await _applicationService.UpdateStatusAsync(id, parsed,userId);
             if (!updated)
                 return NotFound();
 
@@ -106,6 +113,22 @@ namespace HR_System.Controllers
             if (!deleted)
                 return NotFound();
             return NoContent();
+        }
+        [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Employee}")]
+        [HttpGet("my-accepted")]
+        public async Task<IActionResult> GetMyAcceptedApplications()
+        {
+            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim))
+                return Unauthorized();
+
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            var applications =
+                await _applicationService.GetMyAcceptedApplicationsAsync(userId);
+
+            return Ok(applications);
         }
     }
 }

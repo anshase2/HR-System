@@ -1,4 +1,5 @@
-﻿using HR.DAL.enums;
+﻿using HR.DAL.Entities.Identity;
+using HR.DAL.enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,8 @@ namespace HR.DAL.Entities
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
         public Applicant Applicant { get; set; } = null!;
         public Job Job { get; set; } = null!;
+        public Guid? ReviewedById { get; set; }
+        public ApplicationUser? ReviewedBy { get; set; }
         public CVAnalysis? CVAnalysis { get; set; }
     }
 }

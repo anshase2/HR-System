@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import EmployeeFormModal from "../../components/hr/EmployeeFormModal";
 import {
   createEmployee,
@@ -15,7 +14,6 @@ function formatDate(value) {
 }
 
 export default function Employees() {
-  const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -81,21 +79,7 @@ export default function Employees() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="flex min-h-screen">
-        <aside className="w-64 bg-white p-6 shadow-lg">
-          <h1 className="text-2xl font-bold text-blue-600">ITG Careers</h1>
-          <hr className="my-8" />
-          <nav className="space-y-3">
-            <button onClick={() => navigate("/dashboard")} className="block w-full rounded-lg p-3 text-left hover:bg-gray-100">Dashboard</button>
-            <button className="block w-full rounded-lg bg-blue-600 p-3 text-left text-white">Employees</button>
-            <button onClick={() => navigate("/applicants")} className="block w-full rounded-lg p-3 text-left hover:bg-gray-100">Applicants</button>
-            <button onClick={() => navigate("/candidates")} className="block w-full rounded-lg p-3 text-left hover:bg-gray-100">Candidates</button>
-            <button onClick={() => navigate("/settings")} className="block w-full rounded-lg p-3 text-left hover:bg-gray-100">Settings</button>
-          </nav>
-        </aside>
-
-        <main className="min-w-0 flex-1 p-6 md:p-10">
+    <div className="min-w-0">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-4xl font-bold">Employees</h2>
@@ -146,9 +130,6 @@ export default function Employees() {
               </div>
             )}
           </section>
-        </main>
-      </div>
-
       <EmployeeFormModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} onSubmit={handleCreate} submitting={submitting} submitError={submitError} />
     </div>
   );

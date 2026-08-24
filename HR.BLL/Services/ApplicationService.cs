@@ -75,6 +75,40 @@ namespace HR.BLL.Services
 
             await _applicationRepository.AddAsync(application);
             await _applicationRepository.SaveChangesAsync();
+            // Send confirmation email
+            var user = applicant.User;
+
+            if (user != null && !string.IsNullOrWhiteSpace(user.Email))
+            {
+                var subject = "Application Received";
+
+                var body = $"""
+            <h2>Hello {user.FirstName},</h2>
+
+            <p>
+                We have successfully received your application for
+                <strong>{job.Title}</strong>.
+            </p>
+
+            <p>
+                Your application is currently under review.
+            </p>
+
+            <p>
+                We will contact you if there are any updates regarding
+                your application.
+            </p>
+
+            <br/>
+
+            <p>HR Team</p>
+            """;
+
+                await _emailService.SendEmailAsync(
+                    user.Email,
+                    subject,
+                    body);
+            }
 
             return await MapToDtoForApplicantAsync(application);
         }
@@ -141,7 +175,7 @@ namespace HR.BLL.Services
               await _applicationRepository.SaveChangesAsync();
               return true;
           }*/
-        public async Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status)
+        public async Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status, Guid reviewerId)
         {
             var app = await _applicationRepository.GetApplicationByIdAsync(applicationId);
 
@@ -149,7 +183,10 @@ namespace HR.BLL.Services
                 return false;
 
             app.Status = status;
-
+            if (status == ApplicationStatus.Accepted)
+            {
+                app.ReviewedById = reviewerId;
+            }
             _applicationRepository.Update(app);
             await _applicationRepository.SaveChangesAsync();
 
@@ -196,6 +233,7 @@ namespace HR.BLL.Services
                                 subject,
                                 body
                             );
+
                         }
                         catch (Exception ex)
                         {
@@ -244,7 +282,20 @@ namespace HR.BLL.Services
             return await MapToDtoForApplicantAsync(app);
 
         }
+        public async Task<IEnumerable<ApplicationResponseDTO>> GetMyAcceptedApplicationsAsync(Guid userId)
+        {
+            var applications =
+                await _applicationRepository.GetAcceptedByReviewerAsync(userId);
 
+            var result = new List<ApplicationResponseDTO>();
+
+            foreach (var app in applications)
+            {
+                result.Add(await MapToDtoAsync(app));
+            }
+
+            return result;
+        }
         private async Task<ApplicationResponseDTO> MapToDtoAsync(HR.DAL.Entities.Application app)
         {
             var applicant = await _applicantRepository.GetByIdAsync(app.ApplicantId);

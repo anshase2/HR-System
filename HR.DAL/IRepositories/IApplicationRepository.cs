@@ -14,6 +14,7 @@ namespace HR.DAL.IRepositories
         Task<Application> GetApplicationByIdAsync(int id);//with all attributes
         Task<IEnumerable<Application>> GetApplicationsByStatusAsync(ApplicationStatus Status);
         Task<int> CountByJobIdAsync(int jobId);
+        Task<IEnumerable<Application>> GetAcceptedByReviewerAsync(Guid reviewerId);
 
 
     }

@@ -38,5 +38,26 @@ export async function setPassword({ email, token, password, confirmPassword }) {
   });
 }
 
-export default { login, register, logout, setPassword };
+export async function verifyEmail(email, code) {
+  return apiRequest("/Account/verify-email", {
+    method: "POST",
+    body: { email, code },
+  });
+}
+
+export async function resendVerification(email) {
+  return apiRequest("/Account/resend-verification", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export default {
+  login,
+  register,
+  logout,
+  setPassword,
+  verifyEmail,
+  resendVerification,
+};
 

@@ -94,9 +94,9 @@ namespace HR.BLL.Services
             var applicants = await _applicantRepository.GetAllWithUserAsync();
 
             // Filter data based on selected period
-            var filteredJobs = jobs.Where(j =>
+           /* var filteredJobs = jobs.Where(j =>
                 j.PostedDate >= startDate &&
-                j.PostedDate <= endDate);
+                j.PostedDate <= endDate);*/
 
             var filteredApplications = applications.Where(a =>
                 a.SubmittedAt >= startDate &&
@@ -111,11 +111,11 @@ namespace HR.BLL.Services
 
 
             // Jobs statistics
-            var totalJobs = filteredJobs.Count();
+            var totalJobs = jobs.Count();
 
-            var activeJobs = filteredJobs.Count(j => j.IsActive);
+            var activeJobs = jobs.Count(j => j.IsActive);
 
-            var inactiveJobs = filteredJobs.Count(j => !j.IsActive);
+            var inactiveJobs = jobs.Count(j => !j.IsActive);
 
 
             // Applications statistics

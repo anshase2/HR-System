@@ -20,8 +20,8 @@ namespace HR.BLL.Interfaces
         Task<IEnumerable<ApplicationResponseDTO>> GetByJobIdAsync(int jobId);
 
         Task<IEnumerable<ApplicationResponseForApplicantDTO>> GetApplicationsByApplicantAsync(Guid userId);
-
-        Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status);
+        Task<IEnumerable<ApplicationResponseDTO>> GetMyAcceptedApplicationsAsync(Guid userId);
+        Task<bool> UpdateStatusAsync(int applicationId, ApplicationStatus status, Guid reviewerId);
 
         Task<bool> DeleteAsync(int id);
     }

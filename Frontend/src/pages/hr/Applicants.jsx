@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ApplicantDetailsModal from "../../components/applicant/ApplicantDetailsModal";
 import { getActiveJobs } from "../../services/jobService";
 import {
@@ -42,10 +41,12 @@ const getStatusClass = (status) => {
 };
 
 export default function Applicants() {
-  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [jobsError, setJobsError] = useState("");
+  const [titleFilter, setTitleFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [selectedJob, setSelectedJob] = useState(null);
   const [applications, setApplications] = useState([]);
   const [applicationsLoading, setApplicationsLoading] = useState(false);
@@ -275,51 +276,26 @@ export default function Applicants() {
     }
   };
 
+  const filteredJobs = jobs.filter((job) => {
+    const normalizedTitle = titleFilter.trim().toLowerCase();
+    const normalizedDepartment = departmentFilter.trim().toLowerCase();
+    const normalizedLocation = locationFilter.trim().toLowerCase();
+
+    const matchesTitle =
+      !normalizedTitle ||
+      (job.title || "").toLowerCase().includes(normalizedTitle);
+    const matchesDepartment =
+      !normalizedDepartment ||
+      (job.department || "").toLowerCase().includes(normalizedDepartment);
+    const matchesLocation =
+      !normalizedLocation ||
+      (job.location || "").toLowerCase().includes(normalizedLocation);
+
+    return matchesTitle && matchesDepartment && matchesLocation;
+  });
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="flex">
-
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-lg p-6">
-
-          <h1 className="text-2xl font-bold text-blue-600">
-            ITG Careers
-          </h1>
-
-          <hr className="my-8" />
-
-          <nav className="space-y-3">
-
-            <button
-               onClick={() => navigate("/dashboard")}
-            className="block w-full text-left p-3 rounded-lg hover:bg-gray-100"
->
-  Dashboard
-</button>
-
-            
-
-            <button className="block w-full text-left p-3 rounded-lg bg-blue-600 text-white">
-              Applications
-            </button>
-
-            <button  onClick={() => navigate("/candidates")}
-            className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
-              Candidates
-            </button>
-
-            <button onClick={() => navigate("/settings")}
-            className="block w-full text-left p-3 rounded-lg hover:bg-gray-100">
-              Settings
-            </button>
-
-          </nav>
-
-        </aside>
-
-        {/* Main */}
-
-        <main className="flex-1 p-10">
+    <>
 
           <div className="flex justify-between items-center">
 
@@ -346,13 +322,87 @@ export default function Applicants() {
 
           {/* Search + Filters */}
 
+          <div className="grid grid-cols-3 gap-5 mt-6">
+            <div>
+              <label htmlFor="applicants-title-filter" className="mb-2 block font-medium">
+                Title
+              </label>
+              <input
+                id="applicants-title-filter"
+                type="text"
+                value={titleFilter}
+                onChange={(event) => setTitleFilter(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="applicants-department-filter" className="mb-2 block font-medium">
+                Department
+              </label>
+              <select
+                id="applicants-department-filter"
+                value={departmentFilter}
+                onChange={(event) => setDepartmentFilter(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Departments</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Operations">Operations</option>
+                <option value="Customer Service">Customer Service</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Research and Development">Research and Development</option>
+                <option value="Legal">Legal</option>
+                <option value="Procurement">Procurement</option>
+                <option value="Administration">Administration</option>
+                <option value="Business Development">Business Development</option>
+                <option value="Product">Product</option>
+                <option value="Project Management">Project Management</option>
+                <option value="Quality Assurance">Quality Assurance</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Supply Chain">Supply Chain</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="applicants-location-filter" className="mb-2 block font-medium">
+                Location
+              </label>
+              <select
+                id="applicants-location-filter"
+                value={locationFilter}
+                onChange={(event) => setLocationFilter(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Locations</option>
+                <option value="Amman">Amman</option>
+                <option value="Irbid">Irbid</option>
+                <option value="Zarqa">Zarqa</option>
+                <option value="Balqa">Balqa</option>
+                <option value="Madaba">Madaba</option>
+                <option value="Karak">Karak</option>
+                <option value="Tafilah">Tafilah</option>
+                <option value="Ma'an">Ma'an</option>
+                <option value="Aqaba">Aqaba</option>
+                <option value="Mafraq">Mafraq</option>
+                <option value="Jerash">Jerash</option>
+                <option value="Ajloun">Ajloun</option>
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 gap-5 mt-10">
             {jobsLoading ? (
               <div className="col-span-4 py-8 text-center text-gray-600">Loading jobs...</div>
             ) : jobsError ? (
               <div className="col-span-4 py-8 text-center text-red-600">{jobsError}</div>
             ) : (
-              jobs.map((job) => (
+              filteredJobs.map((job) => (
                 <div
                   key={job.id}
                   onClick={() => setSelectedJob(job)}
@@ -497,9 +547,7 @@ export default function Applicants() {
               onClose={() => setSelectedApplicant(null)}
             />
           )}
-        </main>
-      </div>
-    </div>
+    </>
   );
 }
               

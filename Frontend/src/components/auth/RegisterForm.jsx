@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth.jsx";
 import { register } from "../../services/authService";
 import {
   FaUser,
@@ -12,8 +11,6 @@ import {
 
 export default function RegisterForm() {
   const navigate = useNavigate();
-  const { login, setAuthSession } = useAuth();
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("Jordan");
@@ -84,24 +81,11 @@ export default function RegisterForm() {
         confirmPassword,
       });
 
-      let authResponse = registrationResponse;
-
-      if (!authResponse?.token) {
-        authResponse = await login(email, password);
+      if (!registrationResponse?.requiresEmailVerification) {
+        throw new Error("Registration completed without an email verification request.");
       }
 
-      if (!authResponse?.token) {
-        throw new Error("Registration succeeded, but authentication could not be completed.");
-      }
-
-      setAuthSession(authResponse);
-
-      const role = authResponse?.role;
-      if (role === "Admin" || role === "Employee") {
-        navigate("/dashboard");
-      } else {
-        navigate("/home");
-      }
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       const msg = err?.message || "Registration failed. Please try again.";
       setError(msg);

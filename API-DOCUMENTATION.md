@@ -317,8 +317,8 @@ Required.
   "email": "admin@hrsystem.com",
   "firstName": "System",
   "lastName": "Admin",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiration": "2026-08-11T18:00:00Z",
+  "token": "",
+  "expiration": "0001-01-01T00:00:00",
   "role": "Admin"
 }
 ```
@@ -425,8 +425,8 @@ Required.
   "expiration": "2026-08-11T18:00:00Z",
   "role": "Applicant",
   "errors": null,
-  "requiresEmailVerification": false,
-  "message": null
+  "requiresEmailVerification": true,
+  "message": "Registration successful. Please verify your email using the OTP sent to your email address."
 }
 ```
 
@@ -440,12 +440,12 @@ Required.
 | applicant.portfolioUrl | string | Yes | Present on DTO; not set during registration |
 | applicant.userId | guid | Yes | Linked Identity user id |
 | applicant.role | string | No | `"Applicant"` |
-| token | string | No | JWT |
-| expiration | datetime | No | Token expiry |
+| token | string | Yes | Empty during registration; no JWT is issued before OTP verification. |
+| expiration | datetime | Yes | Default value during registration; no JWT is issued before OTP verification. |
 | role | string | No | `"Applicant"` |
 | errors | string[] | Yes | Identity errors on failure |
-| requiresEmailVerification | bool | Yes | DTO default `false`; not set specially in current registration success path |
-| message | string | Yes | Optional message |
+| requiresEmailVerification | bool | Yes | `true`; an OTP was sent to the applicant email. |
+| message | string | Yes | Registration and verification instructions. |
 
 ### Error Responses
 
@@ -691,11 +691,11 @@ Controller returns `Ok(auth)` where `auth` is `authenticationResponseDTO`:
 }
 ```
 
-### Current implementation note
+### Verification behavior
 
-`AuthService.VerifyEmailAsync` currently throws **`NotImplementedException`**. Calling this endpoint will typically result in **500 Internal Server Error** until implemented.
+The endpoint finds the Applicant by email and checks the latest active OTP for that user. The OTP must be unexpired, unused, and match the submitted six-digit code. A successful verification sets both `EmailConfirmed` and `IsEmailVerified` to `true`, marks the OTP used, and returns a JWT response. The OTP itself is never returned.
 
-Intended error paths in the controller (when implemented):
+Invalid, expired, already-used, unknown, or exhausted OTPs return the existing generic error response:
 
 | Status | When |
 |---|---|
@@ -766,11 +766,11 @@ Required.
 }
 ```
 
-### Current implementation note
+### Resend behavior
 
-`AuthService.ResendVerificationAsync` currently throws **`NotImplementedException`**. Calling this endpoint will typically result in **500** until implemented.
+For an existing unverified Applicant, active OTPs are invalidated, a new secure six-digit OTP is stored with the configured expiration, and the code is sent through the existing email service. The response is intentionally generic for unknown, non-Applicant, or already verified accounts.
 
-Intended error paths:
+Error paths:
 
 | Status | When |
 |---|---|
@@ -2127,8 +2127,8 @@ The controller does not handle service failures. Missing recipient configuration
 | POST | `/api/Account/register-applicant` | No | — |
 | POST | `/api/Account/create-employee` | Yes | Admin |
 | POST | `/api/Account/set-password` | No | Identity reset token in request body |
-| POST | `/api/Account/verify-email` | No | — (not implemented in service) |
-| POST | `/api/Account/resend-verification` | No | — (not implemented in service) |
+| POST | `/api/Account/verify-email` | No | — |
+| POST | `/api/Account/resend-verification` | No | — |
 | GET | `/api/Account/logout` | Yes | Any authenticated |
 | GET | `/api/Jobs` | No | — |
 | GET | `/api/Jobs/active` | No | — |
@@ -2157,11 +2157,13 @@ The controller does not handle service failures. Missing recipient configuration
 
 ## Applicant flow
 
-1. `POST /api/Account/register-applicant` → store `token`
-2. `GET /api/Jobs` or `/api/Jobs/active` → show openings
-3. `GET /api/Jobs/{id}` → job details
-4. `POST /api/Application/apply` (multipart + Bearer token)
-5. `GET /api/Application/me` → track applications
+1. `POST /api/Account/register-applicant` → create the unverified Applicant and send an OTP
+2. `POST /api/Account/verify-email` with the email and OTP code → confirm the email and receive a JWT
+3. `POST /api/Account/resend-verification` → invalidate active codes and send a new OTP when needed
+4. `GET /api/Jobs` or `/api/Jobs/active` → show openings
+5. `GET /api/Jobs/{id}` → job details
+6. `POST /api/Application/apply` (multipart + Bearer token)
+7. `GET /api/Application/me` → track applications
 
 ## HR / Admin flow
 
@@ -2185,7 +2187,7 @@ The controller does not handle service failures. Missing recipient configuration
 These are behaviors observed in the current code that frontend developers should be aware of:
 
 1. **Invalid login returns 500** via `Problem(...)`, not 401.
-2. **Email verification endpoints exist but are not implemented** in `AuthService` (`NotImplementedException`).
+2. **Applicant registration requires email verification**; unverified Applicants cannot receive a JWT from login.
 3. **`country` is required** on register/create-employee DTOs but is **not saved** by the auth service.
 4. **Job request `requiredSkills`** is a comma-separated **string**; job responses return a **string array**.
 5. **Apply** returns the smaller `ApplicationResponseForApplicantDTO`, not the HR `ApplicationResponseDTO`.
