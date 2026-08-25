@@ -40,7 +40,14 @@ function AppRouter() {
         {/* Applicant */}
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute roles={["Applicant"]}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/application/:jobId"
           element={

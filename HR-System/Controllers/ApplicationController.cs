@@ -74,10 +74,10 @@ namespace HR_System.Controllers
         public async Task<IActionResult> GetMyApplications()
         {
             var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userIdClaim))
+            if (!Guid.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
-            var apps = await _applicationService.GetApplicationsByApplicantAsync(Guid.Parse(userIdClaim));
+            var apps = await _applicationService.GetApplicationsByApplicantAsync(userId);
             return Ok(apps);
         }
 

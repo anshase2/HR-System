@@ -22,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IJobService, JobService>();
 builder.Services.AddTransient<IApplicationService, ApplicationService>();
+builder.Services.AddTransient<IApplicantService, ApplicantService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddTransient<IEmployeeService, EmployeeService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
@@ -141,7 +142,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins("http://localhost:5175")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

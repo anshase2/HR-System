@@ -28,14 +28,21 @@ async function parseErrorResponse(response) {
       if (typeof data === "string") {
         return data;
       }
+      if (data.errors) {
+        const validationErrors = Object.values(data.errors).flat().filter(Boolean);
+
+        if (validationErrors.length > 0) {
+          return validationErrors.join(" ");
+        }
+      }
+      if (data.message) {
+        return data.message;
+      }
       if (data.detail) {
         return data.detail;
       }
       if (data.title) {
         return data.title;
-      }
-      if (data.errors) {
-        return Object.values(data.errors).flat().join(", ");
       }
       return JSON.stringify(data);
     } catch {

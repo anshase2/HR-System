@@ -1,12 +1,12 @@
-using HR.BLL.DTOs.Job;
-using HR.BLL.DTOs.Auth;
+using HR.BLL.Constants;
 using HR.BLL.DTOs.Application;
+using HR.BLL.DTOs.Auth;
+using HR.BLL.DTOs.Job;
 using HR.BLL.Interfaces;
 using HR.DAL.DatabaseContext;
 using HR.DAL.Entities;
 using HR.DAL.Entities.Identity;
 using HR.DAL.enums;
-
 using HR.DAL.IRepositories;
 using HR.DAL.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -175,9 +175,20 @@ namespace HR.BLL.Services
 
 
 
-        public async Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync()
+        public async Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync(string? role)
         {
             var jobs = await _jobRepository.GetActiveJobsAsync();
+
+            if (role == UserRoles.Employee || role == UserRoles.Admin)
+            {
+                return jobs.Select(MapToDto).ToList();
+            }
+
+
+            jobs = jobs
+                .Where(j => j.ClosingDate >= DateTime.UtcNow)
+                .ToList();
+
             return jobs.Select(MapToDto).ToList();
         }
      

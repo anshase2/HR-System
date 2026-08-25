@@ -154,22 +154,55 @@ export default function JobFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Department *</label>
-              <input
-                type="text"
+              <select
                 value={form.department}
                 onChange={(e) => handleChange("department", e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              />
+              >
+                <option value="">Select Department</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Operations">Operations</option>
+                <option value="Customer Service">Customer Service</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Research and Development">Research and Development</option>
+                <option value="Legal">Legal</option>
+                <option value="Procurement">Procurement</option>
+                <option value="Administration">Administration</option>
+                <option value="Business Development">Business Development</option>
+                <option value="Product">Product</option>
+                <option value="Project Management">Project Management</option>
+                <option value="Quality Assurance">Quality Assurance</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Supply Chain">Supply Chain</option>
+              </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Location *</label>
-              <input
-                type="text"
+              <select
                 value={form.location}
                 onChange={(e) => handleChange("location", e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              />
+              >
+                <option value="">Select Location</option>
+                <option value="Amman">Amman</option>
+                <option value="Irbid">Irbid</option>
+                <option value="Zarqa">Zarqa</option>
+                <option value="Balqa">Balqa</option>
+                <option value="Madaba">Madaba</option>
+                <option value="Karak">Karak</option>
+                <option value="Tafilah">Tafilah</option>
+                <option value="Ma'an">Ma'an</option>
+                <option value="Aqaba">Aqaba</option>
+                <option value="Mafraq">Mafraq</option>
+                <option value="Jerash">Jerash</option>
+                <option value="Ajloun">Ajloun</option>
+              </select>
             </div>
           </div>
 

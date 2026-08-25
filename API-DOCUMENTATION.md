@@ -1615,7 +1615,7 @@ None.
 
 | Status | When |
 |---|---|
-| 401 | Missing token / user id claim |
+| 401 | Missing, invalid, or non-GUID JWT user id claim |
 | 403 | Not Applicant |
 | 500 | `"Applicant not found for this user."` if no applicant profile |
 
@@ -1739,6 +1739,45 @@ None.
 |---|---|
 | 401 / 403 | Auth/role failure |
 | 404 | Application not found |
+
+---
+
+# Applicant Profile
+
+## Get My Applicant Profile
+
+### HTTP Method
+
+`GET`
+
+### URL
+
+`/api/Applicant/me`
+
+### Authentication and Role
+
+Required — `Applicant`. The API reads the authenticated user's GUID from the JWT `sub` claim. There are no request, path, or query parameters.
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "firstName": "Sara",
+  "lastName": "Ahmad",
+  "email": "sara.ahmad@example.com",
+  "phoneNumber": "+962791234567"
+}
+```
+
+### Error Responses
+
+| Status | When |
+|---|---|
+| 401 | Missing, invalid, or non-GUID JWT user id claim |
+| 403 | Authenticated user is not an Applicant |
+| 404 | No Applicant profile exists for the authenticated user |
 
 ---
 
@@ -2141,6 +2180,7 @@ The controller does not handle service failures. Missing recipient configuration
 | GET | `/api/Application/{id}` | Yes | Any authenticated |
 | GET | `/api/Application/job/{jobId}` | Yes | Admin, Employee |
 | GET | `/api/Application/me` | Yes | Applicant |
+| GET | `/api/Applicant/me` | Yes | Applicant |
 | PUT | `/api/Application/{id}/status` | Yes | Admin, Employee |
 | DELETE | `/api/Application/{id}` | Yes | Admin, Employee |
 | GET | `/api/Employee` | Yes | Admin |

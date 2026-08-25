@@ -16,6 +16,13 @@ export async function getApplicationById(id) {
   return apiRequest(`/Application/${id}`, { auth: true });
 }
 
+export async function getMyApplications() {
+  return apiRequest("/Application/me", {
+    method: "GET",
+    auth: true,
+  });
+}
+
 export async function getMyAcceptedApplications() {
   return apiRequest("/Application/my-accepted", {
     method: "GET",

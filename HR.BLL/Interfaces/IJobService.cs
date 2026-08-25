@@ -18,7 +18,7 @@ namespace HR.BLL.Interfaces
     bool? isActive);
 
         Task<JobResponseDTO?> GetByIdAsync(int id);//get job by id
-        Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync();
+        Task<IEnumerable<JobResponseDTO>> GetActiveJobsAsync(string role);
 
         Task<JobResponseDTO> CreateAsync(JobRequestDTO dto, Guid userid);
 

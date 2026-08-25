@@ -37,7 +37,10 @@ namespace HR_System.Controllers
         [HttpGet("active")]
         public async Task<ActionResult<IEnumerable<JobResponseDTO>>> GetActiveJobs()
         {
-            var jobs = await _jobService.GetActiveJobsAsync();
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            
+            var jobs = await _jobService.GetActiveJobsAsync(role);
 
             return Ok(jobs);
         }
