@@ -43,11 +43,8 @@ export default function ApplicationForm() {
 
       await applyForJob(formData);
 
-      setSuccess("Application submitted successfully.");
-
-      window.setTimeout(() => {
-        navigate(`/jobs/${resolvedJobId}`);
-      }, 1200);
+      window.alert("Application submitted successfully!");
+      navigate("/");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

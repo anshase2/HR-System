@@ -306,28 +306,17 @@ export default function Dashboard() {
   >
     <option value="">Departments</option>
 
-    <option value="IT">
-      IT
-    </option>
-
-    <option value="Sales">
-      Sales
-    </option>
-
-    <option value="HR">
-      HR
-    </option>
-
-    <option value="Marketing">
-      Marketing
-    </option>
-
-    <option value="Customer Support">
-      Customer Support
-    </option>
-     <option value="Operations">
-      Operations
-    </option>
+    <option value="Information Technology">information technology</option>
+<option value="Human Resources">Human Resources (HR)</option>
+<option value="Finance">Finance</option>
+<option value="Accounting">Accounting</option>
+<option value="Sales">Sales</option>
+<option value="Marketing">Marketing</option>
+<option value="Operations">Operations</option>
+<option value="Customer Support">Customer Support</option>
+<option value="Legal">Legal</option>
+<option value="Quality Assurance">Quality Assurance (QA)</option>
+<option value="Engineering">Engineering</option>
   </select>
 </div>
             </div>

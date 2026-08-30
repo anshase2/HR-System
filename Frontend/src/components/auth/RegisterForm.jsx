@@ -190,13 +190,11 @@ export default function RegisterForm() {
 
         <div className="flex">
 
-          <div className="w-24 h-14 border border-gray-300 rounded-l-xl bg-gray-100 flex items-center justify-center font-medium text-gray-700">
-            {countryCodes[country]}
-          </div>
+          
 
           <input
             type="tel"
-            placeholder="7XXXXXXXX"
+            placeholder="07XXXXXXXX"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="flex-1 h-14 border border-l-0 border-gray-300 rounded-r-xl px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
