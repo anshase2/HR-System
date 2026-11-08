@@ -1,0 +1,63 @@
+services:
+
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hr-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+
+    ports:
+      - "14330:1433"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+    networks:
+      - hr-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s  
+
+    restart: unless-stopped
+
+  # ASP.NET Core API
+  api:
+    image: anshasi2/hr-system-api:1.0
+
+    container_name: hr-api
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=HR-System Database;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True;"
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    volumes:
+      - data_protection_keys:/home/app/.aspnet/DataProtection-Keys
+    networks:
+      - hr-network
+
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  data_protection_keys:
+
+networks:
+  hr-network:
+    driver: bridge

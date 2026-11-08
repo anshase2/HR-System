@@ -1,0 +1,27 @@
+
+# .NET build output
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Node.js
+**/node_modules/
+**/dist/
+
+# Test output
+**/TestResults/
+
+# Temporary files
+**/*.user
+**/*.suo
+**/.DS_Store
+.env
+.env.*
+!.env.example
